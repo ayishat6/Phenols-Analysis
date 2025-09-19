@@ -18,6 +18,10 @@ library(dplyr) #data manipulation (filter, select, mutate etc)
 library(ggplot2) #creating data visualizations/plots
 ```
 
+```{r}
+
+```
+
 
 ```{r}
 #fsdhh
@@ -41,17 +45,23 @@ table(FullData_allcycles$FOODSEC,useNA="ifany")
 ```{r}
 summary(FullData_allcycles$RIDAGEYR, useNA="ifany")
 
+class(FullData_allcycles$RIDAGEYR) #to see what type of variable you have 
+
+FullData_allcycles<-FullData_allcycles%>%
+  filter(FullData_allcycles$RIDAGEYR>=18) #filtered for observations Age greater than or equal to 18
+
 quartiles<-quantile(FullData_allcycles$RIDAGEYR)
 print(quartiles)
 
-FullData_allcycles<-FullData_allcycles%>%
-  mutate(AGEGROUP=case_when(
-    RIDAGEYR<18 ~1, 
-    RIDAGEYR>=18 & RIDAGEYR<60 ~2, 
-    RIDAGEYR>=60~3, 
-    TRUE~NA_real_
-  ))
+FullData_allcyclesFINAL$AGEGROUP<-cut(
+  FullData_allcyclesFINAL$RIDAGEYR,
+  breaks=quartiles, 
+  include.lowest=TRUE, 
+  labels= c("18-31", "32-46", "47-63", "64-85")
+)
 
+summary(FullData_allcyclesFINAL$AGEQ, useNA="ifany") 
+#no missing
 table(FullData_allcycles$AGEGROUP, useNA="ifany")
 ```
 decided to keep male as reference - september 19th, 2025

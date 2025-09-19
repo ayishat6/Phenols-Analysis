@@ -5,6 +5,11 @@ date: "2025-08-22"
 output: html_document
 ---
 
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = here::here())
+```
+
 ```{r}
 install.packages("haven")
 install.packages("readr")
@@ -12,7 +17,9 @@ install.packages("readr")
 library(haven)
 library(dplyr)
 library(readr)
+```
 
+```{r}
 #2003-2004
 #Fastingstatus
 FAST03_04<-read_xpt("2003_2004_PH_C.xpt") 
@@ -28,7 +35,7 @@ write_csv(FAST03_04C,"FAST03_04C.csv")
 #Demographics
 demo03_04<-read_xpt("2003_2004_DEMO_C.xpt")
 demo03_04C<- demo03_04 %>% 
-  select(SEQN,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC2,INDFMPIR) %>%
+  select(SEQN,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC2, DMDEDUC3,INDFMPIR) %>%
   arrange(SEQN)
 
 #save the file as csv in cleaned data folder 
@@ -81,7 +88,7 @@ write_csv(FAST05_06C,"FAST05_06C.csv")
 #Demographics
 demo05_06<-read_xpt("2005_2006_DEMO_D.xpt")
 demo05_06C<- demo05_06 %>% 
-  select(SEQN,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC2,INDFMPIR) %>%
+  select(SEQN,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC2, DMDEDUC3,INDFMPIR) %>%
   arrange(SEQN)
 
 write_csv(demo05_06C,"demo05_06C.csv")
@@ -132,7 +139,7 @@ write_csv(FAST07_08C,"FAST07_08C.csv")
 #Demographics
 demo07_08<-read_xpt("2007_2008_DEMO_E.xpt")
 demo07_08C<- demo07_08 %>% 
-  select(SEQN,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC2,INDFMPIR) %>%
+  select(SEQN,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC2, DMDEDUC3,INDFMPIR) %>%
   arrange(SEQN)
 
 write_csv(demo07_08C,"demo07_08C.csv")
@@ -183,7 +190,7 @@ write_csv(FAST09_10C,"FAST09_10C.csv")
 #Demographics
 demo09_10<-read_xpt("2009_2010_DEMO_F.xpt")
 demo09_10C<- demo09_10 %>% 
-  select(SEQN,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC2,INDFMPIR) %>%
+  select(SEQN,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC2, DMDEDUC3,INDFMPIR) %>%
   arrange(SEQN)
 
 write_csv(demo09_10C,"demo09_10C.csv")
@@ -235,7 +242,7 @@ write_csv(FAST11_12C,"FAST11_12C.csv")
 #Demographics
 demo11_12<-read_xpt("2011_2012_DEMO_G.xpt")
 demo11_12C<- demo11_12 %>% 
-  select(SEQN,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC2,INDFMPIR) %>%
+  select(SEQN,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC2, DMDEDUC3,INDFMPIR) %>%
   arrange(SEQN)
 
 write_csv(demo11_12C,"demo11_12C.csv")
@@ -286,7 +293,7 @@ write_csv(FAST13_14C,"FAST13_14C.csv")
 #Demographics
 demo13_14<-read_xpt("2013_2014_DEMO_H.xpt")
 demo13_14C<- demo13_14 %>% 
-  select(SEQN,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC2,INDFMPIR) %>%
+  select(SEQN,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC2, DMDEDUC3,INDFMPIR) %>%
   arrange(SEQN)
 
 write_csv(demo13_14C,"demo13_14C.csv")
@@ -338,7 +345,7 @@ write_csv(FAST15_16C,"FAST15_164C.csv")
 #Demographics
 demo15_16<-read_xpt("2015_2016_DEMO_I.xpt")
 demo15_16C<- demo15_16 %>% 
-  select(SEQN,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC2,INDFMPIR) %>%
+  select(SEQN,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC2, DMDEDUC3,INDFMPIR) %>%
   arrange(SEQN)
 
 write_csv(demo15_16C,"demo15_16C.csv")
@@ -376,8 +383,5 @@ dat3_15_16<-dat3_15_16%>%
 ```
 
 
-```{r setup, include=FALSE}
-knitr::opts_knit$set(root.dir = here::here())
-```
 
 
