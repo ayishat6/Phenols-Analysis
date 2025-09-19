@@ -37,7 +37,7 @@ FullData_allcycles<-FullData_allcycles%>%
 table(FullData_allcycles$FOODSEC,useNA="ifany")
 ```
 
-
+##Age
 ```{r}
 summary(FullData_allcycles$RIDAGEYR, useNA="ifany")
 
