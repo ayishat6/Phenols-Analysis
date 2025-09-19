@@ -1,0 +1,383 @@
+---
+title: "Data_Unclean_Phenols"
+author: "Ayishat Yussuf"
+date: "2025-08-22"
+output: html_document
+---
+
+```{r}
+install.packages("haven")
+install.packages("readr")
+
+library(haven)
+library(dplyr)
+library(readr)
+
+#2003-2004
+#Fastingstatus
+FAST03_04<-read_xpt("2003_2004_PH_C.xpt") 
+
+
+FAST03_04C<-FAST03_04%>%
+  select(SEQN, PHAFSTHR)%>% #choose columns participant ID and Total length of food fast hours
+  arrange(SEQN)  
+
+write_csv(FAST03_04C,"FAST03_04C.csv")
+
+
+#Demographics
+demo03_04<-read_xpt("2003_2004_DEMO_C.xpt")
+demo03_04C<- demo03_04 %>% 
+  select(SEQN,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC2,INDFMPIR) %>%
+  arrange(SEQN)
+
+#save the file as csv in cleaned data folder 
+write_csv(demo03_04C,"demo03_04C.csv")
+
+#Exposure (FI)
+FSQ03_04<-read_xpt("2003_2004_FSQ_C.xpt")
+
+FSQ03_04C<-FSQ03_04%>%
+  select(SEQN,FSDHH)%>%
+  arrange(SEQN)
+
+
+write_csv(FSQ03_04C,"FSQ03_04C.csv")
+
+#Outcome (PHE)
+
+PHE03_04<-read_xpt("2003_2004_L24EPH_C.xpt")
+
+PHE03_04C <- PHE03_04%>%
+  select(SEQN,URXBPH,URXBP3,URXUCR)%>%
+  arrange(SEQN)
+
+write_csv(PHE03_04C,"PHE03_04C.csv")
+
+
+# then Merge datasets
+dat1_03_04<- merge(FAST03_04C, demo03_04C, by = "SEQN") #first two, base function is innerjoin.
+dat2_03_04<- merge(dat1_03_04, FSQ03_04C, by = "SEQN") #merge the first mereged with the third dataset
+dat3_03_04<- merge(dat2_03_04, PHE03_04C, by = "SEQN") #third merge
+
+
+# create cycleyr
+dat3_03_04<-dat3_03_04%>%
+  mutate(cycleyr=1)
+
+  
+#2005-2006
+#Fastingstatus
+FAST05_06<-read_xpt("2005_2006_FASTQX_D.xpt") 
+
+
+FAST05_06C<-FAST05_06%>%
+  select(SEQN, PHAFSTHR)%>% #choose columns participant ID and Total length of food fast hours
+  arrange(SEQN)  
+
+write_csv(FAST05_06C,"FAST05_06C.csv")
+
+
+#Demographics
+demo05_06<-read_xpt("2005_2006_DEMO_D.xpt")
+demo05_06C<- demo05_06 %>% 
+  select(SEQN,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC2,INDFMPIR) %>%
+  arrange(SEQN)
+
+write_csv(demo05_06C,"demo05_06C.csv")
+
+#Exposure (FI)
+FSQ05_06<-read_xpt("2005_2006_FSQ_D.xpt")
+
+FSQ05_06C<-FSQ05_06%>%
+  select(SEQN,FSDHH)%>%
+  arrange(SEQN)
+
+
+write_csv(FSQ05_06C,"FSQ05_06.csv")
+
+#Outcome (PHE)
+
+PHE05_06<-read_xpt("2005_2006_EPH_D.xpt")
+
+PHE05_06C <- PHE05_06%>%
+  select(SEQN,URXBPH, URXBP3, URXTRS, URXBUP, URXPPB, URXEPB, URXMPB)%>%
+  arrange(SEQN)
+
+write_csv(PHE05_06C,"PHE05_06C.csv")
+
+
+# Merge datasets
+dat1_05_06<- merge(FAST05_06C, demo05_06C, by = "SEQN") #first two, base function is innerjoin.
+dat2_05_06<- merge(dat1_05_06, FSQ05_06C, by = "SEQN") #merge the first mereged with the third dataset
+dat3_05_06<- merge(dat2_05_06, PHE05_06C, by = "SEQN") #third merge
+
+
+# create cycleyr
+dat3_05_06<-dat3_05_06%>%
+  mutate(cycleyr=2)
+
+#2007-2008
+#Fastingstatus
+FAST07_08<-read_xpt("2007_2008_FASTQX_E.xpt") 
+
+
+FAST07_08C<-FAST07_08%>%
+  select(SEQN, PHAFSTHR)%>% #choose columns participant ID and Total length of food fast hours
+  arrange(SEQN)  
+
+write_csv(FAST07_08C,"FAST07_08C.csv")
+
+
+#Demographics
+demo07_08<-read_xpt("2007_2008_DEMO_E.xpt")
+demo07_08C<- demo07_08 %>% 
+  select(SEQN,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC2,INDFMPIR) %>%
+  arrange(SEQN)
+
+write_csv(demo07_08C,"demo07_08C.csv")
+
+#Exposure (FI)
+FSQ07_08<-read_xpt("2007_2008_FSQ_E.xpt")
+
+FSQ07_08C<-FSQ07_08%>%
+  select(SEQN,FSDHH)%>%
+  arrange(SEQN)
+
+
+write_csv(FSQ07_08C,"FSQ07_08.csv")
+
+#Outcome (PHE)
+
+PHE07_08<-read_xpt("2007_2008_EPH_E.xpt")
+
+PHE07_08C <- PHE07_08%>%
+  select(SEQN,URXBPH, URXBP3, URXTRS, URXBUP, URXPPB, URXEPB, URXMPB)%>%
+  arrange(SEQN)
+
+write_csv(PHE07_08C,"PHE07_08C.csv")
+
+
+# Merge datasets
+dat1_07_08<- merge(FAST07_08C, demo07_08C, by = "SEQN") #first two, base function is innerjoin.
+dat2_07_08<- merge(dat1_07_08, FSQ07_08C, by = "SEQN") #merge the first mereged with the third dataset
+dat3_07_08<- merge(dat2_07_08, PHE07_08C, by = "SEQN") #third merge
+
+
+# create cycleyr
+dat3_07_08<-dat3_07_08%>%
+  mutate(cycleyr=3)
+
+#2009-2010
+#Fastingstatus
+FAST09_10<-read_xpt("2009_2010_FASTQX_F.xpt") 
+
+
+FAST09_10C<-FAST09_10%>%
+  select(SEQN, PHAFSTHR)%>% #choose columns participant ID and Total length of food fast hours
+  arrange(SEQN)  
+
+write_csv(FAST09_10C,"FAST09_10C.csv")
+
+
+#Demographics
+demo09_10<-read_xpt("2009_2010_DEMO_F.xpt")
+demo09_10C<- demo09_10 %>% 
+  select(SEQN,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC2,INDFMPIR) %>%
+  arrange(SEQN)
+
+write_csv(demo09_10C,"demo09_10C.csv")
+
+#Exposure (FI)
+FSQ09_10<-read_xpt("2009_2010_FSQ_F.xpt")
+
+FSQ09_10C<-FSQ09_10%>%
+  select(SEQN,FSDHH)%>%
+  arrange(SEQN)
+
+
+write_csv(FSQ09_10C,"FSQ09_10C.csv")
+
+#Outcome (PHE)
+
+PHE09_10<-read_xpt("2009_2010_EPH_F.xpt")
+
+PHE09_10C <- PHE09_10%>%
+  select(SEQN,URXBPH, URXBP3, URXTRS, URXBUP, URXPPB, URXEPB, URXMPB)%>%
+  arrange(SEQN)
+
+write_csv(PHE09_10C,"PHE09_10C.csv")
+
+
+# Merge datasets
+dat1_09_10<- merge(FAST09_10C, demo09_10C, by = "SEQN") #first two, base function is innerjoin.
+dat2_09_10<- merge(dat1_09_10, FSQ09_10C, by = "SEQN") #merge the first mereged with the third dataset
+dat3_09_10<- merge(dat2_09_10, PHE09_10C, by = "SEQN") #third merge
+
+
+# create cycleyr
+dat3_09_10<-dat3_09_10%>%
+  mutate(cycleyr=4)
+
+
+#2011-2012
+#Fastingstatus
+FAST11_12<-read_xpt("2011_2012_FASTQX_G.xpt") 
+
+
+FAST11_12C<-FAST11_12%>%
+  select(SEQN, PHAFSTHR)%>% 
+  arrange(SEQN)  
+
+write_csv(FAST11_12C,"FAST11_12C.csv")
+
+
+#Demographics
+demo11_12<-read_xpt("2011_2012_DEMO_G.xpt")
+demo11_12C<- demo11_12 %>% 
+  select(SEQN,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC2,INDFMPIR) %>%
+  arrange(SEQN)
+
+write_csv(demo11_12C,"demo11_12C.csv")
+
+#Exposure (FI)
+FSQ11_12<-read_xpt("2011_2012_FSQ_G.xpt")
+
+FSQ11_12C<-FSQ11_12%>%
+  select(SEQN,FSDHH)%>%
+  arrange(SEQN)
+
+
+write_csv(FSQ11_12C,"FSQ11_12C.csv")
+
+#Outcome (PHE)
+
+PHE11_12<-read_xpt("2011_2012_EPH_G.xpt")
+
+PHE11_12C <- PHE11_12%>%
+  select(SEQN,URXBPH, URXBP3, URXTRS, URXBUP, URXPPB, URXEPB, URXMPB)%>%
+  arrange(SEQN)
+
+write_csv(PHE11_12C,"PHE11_12C.csv")
+
+
+# Merge datasets
+dat1_11_12<- merge(FAST11_12C, demo11_12C, by = "SEQN") #first two, base function is innerjoin.
+dat2_11_12<- merge(dat1_11_12, FSQ11_12C, by = "SEQN") #merge the first mereged with the third dataset
+dat3_11_12<- merge(dat2_11_12, PHE11_12C, by = "SEQN") #third merge
+
+
+# create cycleyr
+dat3_11_12<-dat3_11_12%>%
+  mutate(cycleyr=5)
+
+#2013-2014
+#Fastingstatus
+FAST13_14<-read_xpt("2013_2014_FASTQX_H.xpt") 
+
+
+FAST13_14C<-FAST13_14%>%
+  select(SEQN, PHAFSTHR)%>% 
+  arrange(SEQN)  
+
+write_csv(FAST13_14C,"FAST13_14C.csv")
+
+
+#Demographics
+demo13_14<-read_xpt("2013_2014_DEMO_H.xpt")
+demo13_14C<- demo13_14 %>% 
+  select(SEQN,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC2,INDFMPIR) %>%
+  arrange(SEQN)
+
+write_csv(demo13_14C,"demo13_14C.csv")
+
+#Exposure (FI)
+FSQ13_14<-read_xpt("2013_2014_FSQ_H.xpt")
+
+FSQ13_14C<-FSQ13_14%>%
+  select(SEQN,FSDHH)%>%
+  arrange(SEQN)
+
+
+write_csv(FSQ13_14C,"FSQ13_14C.csv")
+
+#Outcome (PHE)
+
+PHE13_14<-read_xpt("2013_2014_EPHPP_H.xpt")
+
+PHE13_14C <- PHE13_14%>%
+  select(SEQN,URXBPH, URXBP3, URXTRS, URXBUP, URXPPB, URXEPB, URXMPB)%>%
+  arrange(SEQN)
+
+write_csv(PHE13_14C,"PHE13_14C.csv")
+
+
+# Merge datasets
+dat1_13_14<- merge(FAST13_14C, demo13_14C, by = "SEQN") #first two, base function is innerjoin.
+dat2_13_14<- merge(dat1_13_14, FSQ13_14C, by = "SEQN") #merge the first mereged with the third dataset
+dat3_13_14<- merge(dat2_13_14, PHE13_14C, by = "SEQN") #third merge
+
+
+# create cycleyr
+dat3_13_14<-dat3_13_14%>%
+  mutate(cycleyr=6)
+
+
+#2015-2016
+#Fastingstatus
+FAST15_16<-read_xpt("2015_2016_FASTQX_I.xpt") 
+
+
+FAST15_16C<-FAST15_16%>%
+  select(SEQN, PHAFSTHR)%>% 
+  arrange(SEQN)  
+
+write_csv(FAST15_16C,"FAST15_164C.csv")
+
+
+#Demographics
+demo15_16<-read_xpt("2015_2016_DEMO_I.xpt")
+demo15_16C<- demo15_16 %>% 
+  select(SEQN,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC2,INDFMPIR) %>%
+  arrange(SEQN)
+
+write_csv(demo15_16C,"demo15_16C.csv")
+
+#Exposure (FI)
+FSQ15_16<-read_xpt("2015_2016_FSQ_I.xpt")
+
+FSQ15_16C<-FSQ15_16%>%
+  select(SEQN,FSDHH)%>%
+  arrange(SEQN)
+
+
+write_csv(FSQ15_16C,"FSQ15_16C.csv")
+
+#Outcome (PHE)
+
+PHE15_16<-read_xpt("2015_2016_EPHPP_I.xpt")
+
+PHE15_16C <- PHE15_16%>%
+  select(SEQN,URXBPH, URXBP3, URXTRS, URXBUP, URXPPB, URXEPB, URXMPB)%>%
+  arrange(SEQN)
+
+write_csv(PHE15_16C,"PHE15_16C.csv")
+
+
+# Merge datasets
+dat1_15_16<- merge(FAST15_16C, demo15_16C, by = "SEQN") #first two, base function is innerjoin.
+dat2_15_16<- merge(dat1_15_16, FSQ15_16C, by = "SEQN") #merge the first mereged with the third dataset
+dat3_15_16<- merge(dat2_15_16, PHE15_16C, by = "SEQN") #third merge
+
+
+# create cycleyr
+dat3_15_16<-dat3_15_16%>%
+  mutate(cycleyr=7)
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = here::here())
+```
+
+
