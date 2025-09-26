@@ -130,3 +130,8 @@ FullData_allcycles<-FullData_allcycles%>%
 table(FullData_allcycles$PIRCAT, useNA="ifany")
 ```
 
+```{r}
+#cycleyears
+table(FullData_allcycles$cycleyr, useNA="ifany")
+
+```

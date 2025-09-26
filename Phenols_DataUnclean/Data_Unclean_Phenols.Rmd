@@ -380,6 +380,8 @@ dat3_15_16<- merge(dat2_15_16, PHE15_16C, by = "SEQN") #third merge
 # create cycleyr
 dat3_15_16<-dat3_15_16%>%
   mutate(cycleyr=7)
+
+
 ```
 
 
