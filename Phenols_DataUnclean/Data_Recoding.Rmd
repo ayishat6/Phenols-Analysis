@@ -18,11 +18,12 @@ library(dplyr) #data manipulation (filter, select, mutate etc)
 library(ggplot2) #creating data visualizations/plots
 ```
 
+#Load File
 ```{r}
-
+FullData_allcycles<-read.csv("~/Documents/Github/Phenols-Analysis/Phenols_DataClean/FullData_allcycles.csv")
 ```
 
-
+##Food Security
 ```{r}
 #fsdhh
 table(FullData_allcycles$FSDHH, useNA="ifany")
@@ -65,6 +66,8 @@ summary(FullData_allcyclesFINAL$AGEQ, useNA="ifany")
 table(FullData_allcycles$AGEGROUP, useNA="ifany")
 ```
 decided to keep male as reference - september 19th, 2025
+
+##Sex
 ```{r}
 table(FullData_allcycles$RIAGENDR, useNA="ifany")
 
@@ -76,6 +79,8 @@ levels(FullData_allcycles$SEX)<-(c("1", "2"))
 table(FullData_allcycles$SEX, useNA="ifany")
 ```
 
+
+##Race/Eth
 ```{r}
 #Recode race/ethnicity 
 table(FullData_allcycles$RIDRETH1, useNA="ifany")
@@ -94,6 +99,8 @@ FullData_allcycles<-FullData_allcycles%>%
 table(FullData_allcycles$RACEETH, useNA="ifany")
 ```
 
+
+##Education
 ```{r}
 #education 
 summary(FullData_allcycles$DMDEDUC3)
@@ -113,6 +120,8 @@ FullData_allcycles <- FullData_allcycles %>%
 table(FullData_allcycles$EDUCAT, useNA="ifany")
 ```
 
+
+##Poverty
 ```{r}
 #poverty
 summary(FullData_allcycles$INDFMPIR, useNA="ifany") #1513missing
@@ -130,8 +139,92 @@ FullData_allcycles<-FullData_allcycles%>%
 table(FullData_allcycles$PIRCAT, useNA="ifany")
 ```
 
+
+##CycleYr
+Check levels of cycle year, make sure they match up with your analysis timespan, and check missingness
 ```{r}
 #cycleyears
 table(FullData_allcycles$cycleyr, useNA="ifany")
+
+```
+
+
+##Phenols
+Urinary Bisphenol A - URXBPH
+Urinary Bisphenol F - URXBPF
+Urinary Bisphenol S - URXBPS
+Urinary 2-Hydroxy-4-metoxybenzophenone (Benzophenone-3) - URXBP3
+Urinary 2,4,4’-Trichloro-2’-hydroxyphenyl ether (Triclosan) - URXTRS
+Urinary Butyl paraben - URXBUP
+Urinary Propyl paraben - URXPPB
+Urinary Ethyl paraben - URXEPB
+Urinary Methyl paraben - URXMPB
+```{r}
+names(FullData_allcycles)
+FullData_allcycles <- FullData_allcycles %>%
+  select(-c(URXUCR.x, URXUCR.y))
+
+#BPA
+summary(FullData_allcycles$URXBPH, na.rm = FALSE)
+
+#BPF
+
+#BPS
+
+```
+
+## Create Sample 2 (final analytic dataset)
+```{r}
+FullData_allcycles$SAMPLE2 <- FullData_allcycles$SAMPLE
+
+names(FullData_allcycles)#check if variable was created
+
+```
+
+
+```{r}
+# Define metabolites, their raw columns, flag columns, and their respective LOD values
+metabolites <- list(
+  MNBP = list(raw_col = "URXMBP", flag_col = "URDMBPLC", lod = 0.4),
+  MCPP = list(raw_col = "URXMC1", flag_col = "URDMC1LC", lod = 0.4),
+  MEP = list(raw_col = "URXMEP", flag_col = "URDMEPLC", lod = 1.2),
+  MHP = list(raw_col = "URXMHP", flag_col = "URDMHPLC", lod = 0.8),
+  MIB = list(raw_col = "URXMIB", flag_col = "URDMIBLC", lod = 0.8),
+  MZP = list(raw_col = "URXMZP", flag_col = "URDMZPLC", lod = 0.3),
+  MHH = list(raw_col = "URXMHH", flag_col = "URDMHHLC", lod = 0.4),
+  MOH = list(raw_col = "URXMOH", flag_col = "URDMOHLC", lod = 0.2)
+)
+
+
+# Replace flagged values with LOD/sqrt(2) for all metabolites
+for (metab in names(metabolites)) {
+  
+  # Extract the columns for raw values, flag columns, and LOD values
+  raw_col <- metabolites[[metab]]$raw_col
+  flag_col <- metabolites[[metab]]$flag_col
+  lod <- metabolites[[metab]]$lod
+  
+  # Create metabolite column by copying the raw data
+  FullData_allcycles[[metab]] <- FullData_allcycles[[raw_col]]
+  
+  # For flag columns (i.e., below-detection or missing), replace flagged values with LOD/sqrt(2)
+  FullData_allcycles[[metab]][FullData_allcycles[[flag_col]] == 1] <- lod / sqrt(2)
+  
+  # Calculate the standard deviation of the metabolite for complete cases
+  metab_sd <- sd(FullData_allcycles[[metab]][FullData_allcycles$SAMPLE == 1], na.rm = TRUE)
+  
+  # Set outlier cutoff as 5 * SD
+  cutoff <- 5 * metab_sd
+  
+  # Flag outliers (if metabolite value > 5*SD) by setting SAMPLE2 to 0
+  FullData_allcycles$SAMPLE2[FullData_allcycles[[metab]] > cutoff] <- 0
+  
+  # Output some summary statistics for each metabolite
+  cat("\n---", metab, "---\n")
+  cat("Standard Deviation:", round(metab_sd, 3), "\n")
+  cat("5x Standard Deviation Cutoff:", round(cutoff, 3), "\n")
+  cat("Number of Outliers (SAMPLE2 = 0):", sum(FullData_allcycles$SAMPLE2 == 0, na.rm = TRUE), "\n")
+  cat("Post-Outlier Standard Deviation:", round(sd(FullData_allcycles[[metab]][FullData_allcycles$SAMPLE2 == 1], na.rm = TRUE), 3), "\n")
+}
 
 ```

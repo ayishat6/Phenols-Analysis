@@ -11,8 +11,8 @@ knitr::opts_knit$set(root.dir = here::here())
 ```
 
 ```{r}
-install.packages("haven")
-install.packages("readr")
+#install.packages("haven")
+#install.packages("readr")
 
 library(haven)
 library(dplyr)
@@ -23,7 +23,6 @@ library(readr)
 #2003-2004
 #Fastingstatus
 FAST03_04<-read_xpt("2003_2004_PH_C.xpt") 
-
 
 FAST03_04C<-FAST03_04%>%
   select(SEQN, PHAFSTHR)%>% #choose columns participant ID and Total length of food fast hours
@@ -53,7 +52,7 @@ write_csv(FSQ03_04C,"FSQ03_04C.csv")
 
 #Outcome (PHE)
 
-PHE03_04<-read_xpt("2003_2004_L24EPH_C.xpt")
+PHE03_04<-read_xpt("2003_2004_L16_C.xpt")
 
 PHE03_04C <- PHE03_04%>%
   select(SEQN,URXBPH,URXBP3,URXUCR)%>%
@@ -61,6 +60,8 @@ PHE03_04C <- PHE03_04%>%
 
 write_csv(PHE03_04C,"PHE03_04C.csv")
 
+
+#creatinine
 
 # then Merge datasets
 dat1_03_04<- merge(FAST03_04C, demo03_04C, by = "SEQN") #first two, base function is innerjoin.
