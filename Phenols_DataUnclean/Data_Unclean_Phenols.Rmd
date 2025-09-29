@@ -52,10 +52,10 @@ write_csv(FSQ03_04C,"FSQ03_04C.csv")
 
 #Outcome (PHE)
 
-PHE03_04<-read_xpt("2003_2004_L16_C.xpt")
+PHE03_04<-read_xpt("2003_2004_L24EPH_C.xpt")
 
 PHE03_04C <- PHE03_04%>%
-  select(SEQN,URXBPH,URXBP3,URXUCR)%>%
+  select(SEQN,colnames(PHE03_04[2:9]))%>% #replace the col # for the remaining phenol files to pull in phenols and LC variable
   arrange(SEQN)
 
 write_csv(PHE03_04C,"PHE03_04C.csv")
@@ -73,7 +73,15 @@ dat3_03_04<- merge(dat2_03_04, PHE03_04C, by = "SEQN") #third merge
 dat3_03_04<-dat3_03_04%>%
   mutate(cycleyr=1)
 
-  
+
+
+#write csv file 
+write.csv(dat3_03_04, "FullData_2003_2004.csv") #save csv file
+```
+
+
+
+```{r}  
 #2005-2006
 #Fastingstatus
 FAST05_06<-read_xpt("2005_2006_FASTQX_D.xpt") 
@@ -125,6 +133,13 @@ dat3_05_06<- merge(dat2_05_06, PHE05_06C, by = "SEQN") #third merge
 dat3_05_06<-dat3_05_06%>%
   mutate(cycleyr=2)
 
+
+#write csv file 
+write.csv(dat3_05_06, "FullData_2005_2006.csv") #save csv file
+
+```
+
+```{r}
 #2007-2008
 #Fastingstatus
 FAST07_08<-read_xpt("2007_2008_FASTQX_E.xpt") 
@@ -176,6 +191,10 @@ dat3_07_08<- merge(dat2_07_08, PHE07_08C, by = "SEQN") #third merge
 dat3_07_08<-dat3_07_08%>%
   mutate(cycleyr=3)
 
+```
+
+```{r}
+
 #2009-2010
 #Fastingstatus
 FAST09_10<-read_xpt("2009_2010_FASTQX_F.xpt") 
@@ -226,8 +245,11 @@ dat3_09_10<- merge(dat2_09_10, PHE09_10C, by = "SEQN") #third merge
 # create cycleyr
 dat3_09_10<-dat3_09_10%>%
   mutate(cycleyr=4)
+```
 
 
+
+```{r}
 #2011-2012
 #Fastingstatus
 FAST11_12<-read_xpt("2011_2012_FASTQX_G.xpt") 
@@ -278,7 +300,9 @@ dat3_11_12<- merge(dat2_11_12, PHE11_12C, by = "SEQN") #third merge
 # create cycleyr
 dat3_11_12<-dat3_11_12%>%
   mutate(cycleyr=5)
+```
 
+```{r}
 #2013-2014
 #Fastingstatus
 FAST13_14<-read_xpt("2013_2014_FASTQX_H.xpt") 
@@ -329,7 +353,10 @@ dat3_13_14<- merge(dat2_13_14, PHE13_14C, by = "SEQN") #third merge
 # create cycleyr
 dat3_13_14<-dat3_13_14%>%
   mutate(cycleyr=6)
+```
 
+
+```{r}
 
 #2015-2016
 #Fastingstatus

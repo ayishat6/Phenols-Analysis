@@ -173,7 +173,7 @@ summary(FullData_allcycles$URXBPH, na.rm = FALSE)
 
 ```
 
-## Create Sample 2 (final analytic dataset)
+Create Sample 2 (final analytic dataset)
 ```{r}
 FullData_allcycles$SAMPLE2 <- FullData_allcycles$SAMPLE
 
@@ -182,10 +182,14 @@ names(FullData_allcycles)#check if variable was created
 ```
 
 
+
+###Outliers
+
+raw column= phenol concentration (ng/mL), flag_column= below or above LOD?  LOD= obtained from NHANES documentation
 ```{r}
 # Define metabolites, their raw columns, flag columns, and their respective LOD values
 metabolites <- list(
-  MNBP = list(raw_col = "URXMBP", flag_col = "URDMBPLC", lod = 0.4),
+  BPH = list(raw_col = "URXBPH", flag_col = "URDBPHLC", lod = 0.2), #example fill in rest 
   MCPP = list(raw_col = "URXMC1", flag_col = "URDMC1LC", lod = 0.4),
   MEP = list(raw_col = "URXMEP", flag_col = "URDMEPLC", lod = 1.2),
   MHP = list(raw_col = "URXMHP", flag_col = "URDMHPLC", lod = 0.8),
@@ -196,7 +200,7 @@ metabolites <- list(
 )
 
 
-# Replace flagged values with LOD/sqrt(2) for all metabolites
+# Replace flagged values with LOD/sqrt(2) for all metabolites (LEAVE THIS FUNCTION AND RUN AS IS)
 for (metab in names(metabolites)) {
   
   # Extract the columns for raw values, flag columns, and LOD values
@@ -228,3 +232,67 @@ for (metab in names(metabolites)) {
 }
 
 ```
+
+
+###Replace missingness
+
+```{r}
+#replace missingness (REPLACE WITH PHENOLS )
+FullData_allcycles$SAMPLE2<-ifelse(
+  is.na(FullData_allcycles$MEP)|
+  is.na(FullData_allcycles$MNBP)|
+  is.na(FullData_allcycles$MIB)|
+  is.na(FullData_allcycles$MCPP)|
+  is.na(FullData_allcycles$MZP)|
+  is.na(FullData_allcycles$MHP)|
+  is.na(FullData_allcycles$MHH)|
+  is.na(FullData_allcycles$MOH),
+  0, FullData_allcycles$SAMPLE2
+)
+
+
+
+
+#create log transformations now so they are in survey + subesets 
+
+#learning visual look at histogram of normal scale values: 
+
+#MEP (replace with a phenol) 
+hist(FullData_allcycles$MEP)
+
+
+#now log transform and look at the new histogram. You should see difference. 
+FullData_allcycles$MEP_LOG<-log(FullData_allcycles$MEP)
+
+hist(FullData_allcycles$MEP_LOG)
+
+
+
+#log transform remaining phenols 
+FullData_allcycles$MEP_LOG<-log(FullData_allcycles$MEP)
+FullData_allcycles$MNBP_LOG<-log(FullData_allcycles$MNBP)
+FullData_allcycles$MIB_LOG<-log(FullData_allcycles$MIB)
+FullData_allcycles$MCPP_LOG<-log(FullData_allcycles$MCPP)
+FullData_allcycles$MZP_LOG<-log(FullData_allcycles$MZP)
+FullData_allcycles$MHP_LOG<-log(FullData_allcycles$MHP)
+FullData_allcycles$MHH_LOG<-log(FullData_allcycles$MHH)
+FullData_allcycles$MOH_LOG<-log(FullData_allcycles$MOH)
+
+```
+
+
+
+##Weights
+```{r}
+#change survey weights 
+FullData_allcycles <- FullData_allcycles %>%
+  mutate(SURVWEIGHT = case_when(
+    cycleyr >= 1 & !is.na(WTMEC2YR) ~ WTMEC2YR * (1 / 10),
+    TRUE ~ NA_real_
+  ))
+
+
+write_csv(FullData_allcycles, "Phenols_DataClean/FullData_allcyclesFINAL.csv")
+
+```
+
