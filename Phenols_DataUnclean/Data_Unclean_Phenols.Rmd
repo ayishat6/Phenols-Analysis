@@ -5,11 +5,11 @@ date: "2025-08-22"
 output: html_document
 ---
 
-
+#Knit
 ```{r setup, include=FALSE}
 knitr::opts_knit$set(root.dir = here::here())
 ```
-
+#Load Packages
 ```{r}
 #install.packages("haven")
 #install.packages("readr")
@@ -19,6 +19,7 @@ library(dplyr)
 library(readr)
 ```
 
+#Clean Cycle Years
 ```{r}
 #2003-2004
 #Fastingstatus
@@ -413,5 +414,45 @@ dat3_15_16<-dat3_15_16%>%
 ```
 
 
+#Create Working Dataset
+```{r}
+#combine all the datasets! 
 
 
+#check missing 
+sum(is.na(FullData_1999_2000$SDMVSTRA))
+#0 missing
+sum(is.na(FullData_1999_2000$SDMVPSU))
+#0 missing 
+sum(is.na(FullData_2001_2002$SDMVSTRA))
+#0 missing 
+sum(is.na(FullData_2001_2002$SDMVPSU))
+#0 missing
+sum(is.na(FullData_2003_2004$SDMVSTRA)) #0 missing
+sum(is.na(FullData_2003_2004$SDMVPSU)) #0 missing
+
+
+
+#merge all datasets into one: 
+FullData_allcycles<-bind_rows(
+  FullData_1999_2000,
+  FullData_2001_2002,
+  FullData_2003_2004,
+  FullData_2005_2006,
+  FullData_2007_2008,
+  FullData_2009_2010,
+  FullData_2011_2012,
+  FullData_2013_2014,
+  FullData_2015_2016,
+  FullData_2017_2018
+)
+
+print(FullData_allcycles)
+sum(is.na(FullData_allcycles$SDMVPSU))
+sum(is.na(FullData_allcycles$SDMVSTRA))
+sum(is.na(FullData_allcycles$SURVWEIGHT))
+
+#27,983 observations and 87 variables :)
+
+write_csv(FullData_allcycles,"/Users/marshaenickelberry/Documents/Github/EDC_FI/Data_cleaned")#replace with your path name for folder
+```

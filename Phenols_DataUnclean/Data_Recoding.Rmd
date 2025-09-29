@@ -185,7 +185,7 @@ names(FullData_allcycles)#check if variable was created
 
 ###Outliers
 
-raw column= phenol concentration (ng/mL), flag_column= below or above LOD?  LOD= obtained from NHANES documentation
+raw column= phenol concentration (ng/mL), flag_column= below or above LOD?  LOD= obtained from NHANES documentation (the doc file on NHANES website. You can use last cycle years doc to fill in these values)
 ```{r}
 # Define metabolites, their raw columns, flag columns, and their respective LOD values
 metabolites <- list(
