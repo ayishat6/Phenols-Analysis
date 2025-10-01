@@ -56,13 +56,20 @@ write_csv(FSQ03_04C,"FSQ03_04C.csv")
 PHE03_04<-read_xpt("2003_2004_L24EPH_C.xpt")
 
 PHE03_04C <- PHE03_04%>%
-  select(SEQN,colnames(PHE03_04[2:9]))%>% #replace the col # for the remaining phenol files to pull in phenols and LC variable
+  select(SEQN,colnames(PHE03_04[2:9]))%>% 
   arrange(SEQN)
 
 write_csv(PHE03_04C,"PHE03_04C.csv")
 
 
 #creatinine
+L16_C<-read_xpt("2003_2004_L16_C.xpt")
+
+L16_CC<- L16_C %>%
+   select(SEQN,URXUCR)%>%
+  arrange(SEQN) 
+
+write_csv(L16_CC,"L16_CC.csv")
 
 # then Merge datasets
 dat1_03_04<- merge(FAST03_04C, demo03_04C, by = "SEQN") #first two, base function is innerjoin.
@@ -118,11 +125,19 @@ write_csv(FSQ05_06C,"FSQ05_06.csv")
 PHE05_06<-read_xpt("2005_2006_EPH_D.xpt")
 
 PHE05_06C <- PHE05_06%>%
-  select(SEQN,URXBPH, URXBP3, URXTRS, URXBUP, URXPPB, URXEPB, URXMPB)%>%
+  select(SEQN,colnames(PHE05_06[c(2:7, 10:19)]))%>% 
   arrange(SEQN)
 
 write_csv(PHE05_06C,"PHE05_06C.csv")
 
+#creatinine
+ALB_CR_D<-read_xpt("2005_2006_ALB_CR_D.xpt")
+
+ALB_CR_DC<- ALB_CR_D %>%
+   select(SEQN,URXUCR)%>%
+  arrange(SEQN) 
+
+write_csv(ALB_CR_DC,"ALB_CR_DC.csv")
 
 # Merge datasets
 dat1_05_06<- merge(FAST05_06C, demo05_06C, by = "SEQN") #first two, base function is innerjoin.
@@ -176,11 +191,19 @@ write_csv(FSQ07_08C,"FSQ07_08.csv")
 PHE07_08<-read_xpt("2007_2008_EPH_E.xpt")
 
 PHE07_08C <- PHE07_08%>%
-  select(SEQN,URXBPH, URXBP3, URXTRS, URXBUP, URXPPB, URXEPB, URXMPB)%>%
+  select(SEQN,colnames(PHE07_08[c(2:3, 6:19)]))%>% 
   arrange(SEQN)
 
 write_csv(PHE07_08C,"PHE07_08C.csv")
 
+#creatinine
+ALB_CR_E<-read_xpt("2007_2008_ALB_CR_E.xpt")
+
+ALB_CR_EC<- ALB_CR_E %>%
+   select(SEQN,URXUCR)%>%
+  arrange(SEQN) 
+
+write_csv(ALB_CR_EC,"ALB_CR_EC.csv")
 
 # Merge datasets
 dat1_07_08<- merge(FAST07_08C, demo07_08C, by = "SEQN") #first two, base function is innerjoin.
@@ -234,8 +257,14 @@ PHE09_10C <- PHE09_10%>%
   select(SEQN,URXBPH, URXBP3, URXTRS, URXBUP, URXPPB, URXEPB, URXMPB)%>%
   arrange(SEQN)
 
+PHE09_10C <- PHE09_10%>%
+  select(SEQN,colnames(PHE09_10[c(2:3, 6:19)]))%>% 
+  arrange(SEQN)
+
 write_csv(PHE09_10C,"PHE09_10C.csv")
 
+
+#creatinine
 
 # Merge datasets
 dat1_09_10<- merge(FAST09_10C, demo09_10C, by = "SEQN") #first two, base function is innerjoin.
@@ -289,7 +318,13 @@ PHE11_12C <- PHE11_12%>%
   select(SEQN,URXBPH, URXBP3, URXTRS, URXBUP, URXPPB, URXEPB, URXMPB)%>%
   arrange(SEQN)
 
+PHE11_12C <- PHE11_12%>%
+  select(SEQN,colnames(PHE11_12[2:17]))%>% 
+  arrange(SEQN)
+
 write_csv(PHE11_12C,"PHE11_12C.csv")
+
+#creatinine
 
 
 # Merge datasets
@@ -342,7 +377,13 @@ PHE13_14C <- PHE13_14%>%
   select(SEQN,URXBPH, URXBP3, URXTRS, URXBUP, URXPPB, URXEPB, URXMPB)%>%
   arrange(SEQN)
 
+PHE13_14C <- PHE13_14%>%
+  select(SEQN,colnames(PHE13_14[c(2:10, 13:22, 27)]))%>%  
+  arrange(SEQN)
+
 write_csv(PHE13_14C,"PHE13_14C.csv")
+
+#creatinine
 
 
 # Merge datasets
@@ -397,7 +438,13 @@ PHE15_16C <- PHE15_16%>%
   select(SEQN,URXBPH, URXBP3, URXTRS, URXBUP, URXPPB, URXEPB, URXMPB)%>%
   arrange(SEQN)
 
+PHE15_16C <-  PHE15_16%>%
+  select(SEQN,colnames( PHE15_16[c(2:10, 13:22)]))%>% 
+  arrange(SEQN)
+
 write_csv(PHE15_16C,"PHE15_16C.csv")
+
+#creatinine
 
 
 # Merge datasets
