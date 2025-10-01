@@ -1,0 +1,879 @@
+---
+title: "Data Cleaning"
+author: "Marshae Nickelberry"
+date: "2024-01-18"
+output: word_document
+---
+
+This code chunk sets the "working directory" for your R Markdown file to your project folder (where your .Rproj file lives) using the here package. By doing this, any file paths in your code will be relative to your R project, making your analyses more organized and reproducible. It also prevents errors that can happen if your working directory isn’t what you expect, especially when opening your project on a different computer or sharing it with someone else.
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = here::here())
+```
+
+#Download/Packages
+
+You can uncomment a line of code (remove the hashtag # at the start) by highlighting it and pressing command + shift + c on your Mac. This will turn the line into an active command, letting you—for example—install a package. Once you have installed the package, it's a good idea to comment the line out again (add the # back) so you don't reinstall the package every time you run your code. Using command + shift + c again will quickly comment or uncomment selected lines.
+
+This way, when you rerun your code later, you won’t have to wait for each package to be downloaded again, but you can still load the packages using the library() command.
+
+```{r}
+#install.packages("foreign")
+#install.packages("readr")
+#install.packages("haven")
+library(dplyr) #one of most common packages see notes below
+library(readr) #use to read in csv files
+library(haven) #read in xpt files (from SAS)
+```
+
+The package dplyr is a grammar of data manipulation providing a consistent set of "verbs" to help you solve most data manipulation practices. 
+ 
+functions like "mutate" help add new variables
+"select" helps pick variables or columns based on their names 
+"filter" helps pick rows based on their values 
+"arrange" changes the ordering of the rows
+
+https://dplyr.tidyverse.org <- helpful documentation and cheat sheets to learn more. 
+
+The package readr is another core tidyverse world. Readr will give you functions a step above base R and allow you to read in csv, delimited text files and data stream (rds files--you'll use these in the analysis most likely)
+
+examples of functions: read_csv(), read_delim(), read_rds()
+
+Note: readxl is the package you'd use to read in data from excel files, still apart of tidyverse but a different package from readr. the functions look the same (read_excel(), or read_xlsx(), etc.)
+
+Lastly haven helps read in other stastical programming files such as SAS (which uses xpt files)
+
+------------------------------------------------------------------
+
+#Data Cleaning
+
+Load in SAS files from NHANES, create a copy of the dataset, select the necessary variables, and save as a csv file. 
+
+Note as we discussed for each year you will read in fasting status (fasting questionnaire), demographics, food security survey data, and urinary phenols + creatinine. 
+
+As mentioned you may want to triple check if creatinine variables are present in the phenols dataset, otherwise you'll have to also download that data from NHANES and read those files in. 
+
+Ultimately you want to merge all of the files into one.
+
+Replace the code below with your files 
+```{r}
+#1999-2000 
+#Demographics 
+
+#BMI 
+BMI99_20<-read_xpt("BMX_1999-2000.XPT") 
+
+
+BMI99_20C<-BMI99_20%>%
+  select(SEQN, BMXBMI)%>% #choose columns participant ID and BMI 
+  arrange(SEQN) #order this by participant ID 
+
+write_csv(BMI99_20C, "BMI99_20C.csv")
+
+#DEMO
+
+demo99_20<-read_xpt("DEMO.XPT_1999_2000")
+demo99_20C<- demo99_20 %>% 
+  select( SEQN,SDDSRVYR,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC3,DMDEDUC2,DMDMARTL,INDFMPIR,RIDEXPRG,WTMEC4YR,SDMVPSU,SDMVSTRA) %>% #only keep these columns
+  arrange(SEQN) #arrange by ID:)
+
+
+#save the file as csv in cleaned data folder 
+write_csv(demo99_20C, "demo99_20C.csv")
+
+#Exposure (FI)
+FSQ99_20<-read_xpt("FSQ.XPT_1999_2000")
+
+FSQ99_20C<-FSQ99_20%>%
+  select(SEQN,HHFDSEC,ADFDSEC,CHFDSEC)%>%
+  arrange(SEQN)
+
+
+write_csv(FSQ99_20C,"FSQ99_20C.csv")
+
+#Outcome (PHTH)
+
+PHTH99_20<-read_xpt("PHPYPA.XPT_1999_2000")
+
+PHTH99_20C <- PHTH99_20 %>%
+  select(SEQN, WTSPH4YR, WTSPH2YR, colnames(PHTH99_20)[56:71])%>%
+  arrange(SEQN)
+
+write_csv(PHTH99_20C,"PHTH99_20C.csv")
+
+
+
+
+
+# then Merge datasets
+dat1_99_20<- merge(BMI99_20C, demo99_20C, by = "SEQN") #first two, base function is innerjoin.
+dat2_99_20<- merge(dat1_99_20, FSQ99_20C, by = "SEQN") #merge the first mereged with the third dataset
+dat3_99_20<- merge(dat2_99_20, PHTH99_20C, by = "SEQN") #third merge
+
+
+# create cycleyr
+dat3_99_20<-dat3_99_20%>%
+  mutate(cycleyr=1)
+
+------------------------------------------------------------------
+
+# View the resulting merged dataset
+print(dat3_99_20)
+#2,648 observations, 36 variables and cycleyr=1 
+
+# Define the folder path where you want to save your CSV files
+folder_path <- "/Users/marshaenickelberry/Documents/Github/EDC_FI/Data_cleaned/archive"  # Update with your folder path
+
+# Make sure the folder exists (you can manually create the folder if needed)
+if (!dir.exists(folder_path)) {
+  dir.create(folder_path, recursive = TRUE)
+}
+
+# Save the modified dataset to a new CSV file
+FullData_1999_2000<-dat3_99_20
+
+
+#save csv file 
+write_csv(FullData_1999_2000, file.path(folder_path, "FullData_1999_2000.csv"))
+```
+
+When I first wrote this, I thought I needed to specify something like all.x = TRUE while merging, but in R the default for merge() is actually an inner join—so only rows that match between both datasets are kept. If I had used all.x = TRUE, it would have done a “left join,” keeping everyone from the first dataset and adding info from the second when there’s a match (and filling in NA if not). Using all = TRUE would be a “full join” (keeping all rows from both datasets), and all.y = TRUE would be a “right join” (keeping all rows from the second dataset).
+
+If you’ve used Stata, this is kind of like looking at the _merge variable after a join:
+
+_merge == 1 means only in the first dataset,
+_merge == 2 only in the second,
+_merge == 3 in both.
+One more NHANES heads up: phthalates were only measured for a subsample of participants (ages 6 and up, about a third of the full sample), so after merging, you’ll see a lot fewer people with phthalate data compared to the other datasets. Don’t worry if you see a bunch of missing phthalate values—that just reflects NHANES’ sampling.
+
+
+```{r}
+#repeat for all years:) 
+
+#2001-2002 (B)
+
+#Demographics 
+
+demo01_02<-read_xpt("DEMO_B.XPT_2001_2002")
+demo01_02C<- demo01_02 %>% 
+  select( SEQN,SDDSRVYR,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC3,DMDEDUC2,DMDMARTL,INDFMPIR,RIDEXPRG,WTMEC4YR,SDMVPSU,SDMVSTRA) %>%
+  arrange(SEQN)
+
+
+#save the file as csv in cleaned data folder 
+write_csv(demo01_02C,"demo01_02C.csv")
+
+
+#BMI
+BMI01_02<-read_xpt("BMX_2001-2002.XPT")
+
+BMI01_02C<-BMI01_02%>%
+  select(SEQN, BMXBMI)%>% 
+  arrange(SEQN)
+
+write_csv(BMI01_02C,"BMI01_02C.csv")
+
+
+#Exposure (FI)
+FSQ01_02<-read_xpt("FSQ_B.XPT_2001_2002")
+
+FSQ01_02C<-FSQ01_02%>%
+  select(SEQN,HHFDSEC,ADFDSEC,CHFDSEC)%>%
+  arrange(SEQN)
+
+
+write_csv(FSQ01_02C,"FSQ01_02C.csv")
+
+#Outcome (PHTH)
+
+PHTH01_02<-read_xpt("PHPYPA_B.XPT_2001_2002")
+
+PHTH01_02C <- PHTH01_02 %>%
+  arrange(SEQN) #keep all for matching zoe
+
+write_csv(PHTH01_02C,"PHTH01_02C.csv")
+
+
+#Creatinine 
+
+L16_B<-read_xpt("L16_B.xpt")
+
+L16_BC<- L16_B %>%
+   select(SEQN,URXUCR,URXUCRSI)%>%
+  arrange(SEQN) 
+
+write_csv(L16_BC,"L16_BC.csv")
+
+
+
+# then Merge datasets(four datasets bc of creatinine)
+dat1_01_02<- merge(BMI01_02C, demo01_02C, by = "SEQN") #first two
+dat2_01_02<- merge(dat1_01_02, FSQ01_02C, by = "SEQN") #merge the first mereged with the third dataset
+dat3_01_02<- merge(dat2_01_02, PHTH01_02C, by = "SEQN") #third merge
+dat4_01_02<- merge(dat3_01_02, L16_BC, by = "SEQN")#final merge
+
+
+# Drop the merge indicator columns
+dat4_01_02<- dat4_01_02%>% 
+  mutate(cycleyr=2)
+
+#2901 observations and 48 variables :)
+
+# Save the modified dataset to a new CSV file
+FullData_2001_2002<-dat4_01_02
+
+
+#save csv file 
+write_csv(FullData_2001_2002, file.path(folder_path, "FullData_2001_2002.csv"))
+
+
+```
+
+Note: as some point Zoe just starts keeping all the phathalte data, will do that from now, and delete in master file. 
+```{r}
+#2003-2004 
+#Demographics 
+
+demo03_04<-read_xpt("DEMO_C.XPT_2003_2004")
+demo03_04C<- demo03_04%>% 
+  select( SEQN,SDDSRVYR,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC3,DMDEDUC2,DMDMARTL,INDFMPIR,RIDEXPRG,WTMEC2YR,SDMVPSU,SDMVSTRA) %>%
+  arrange(SEQN) 
+
+
+#save the file as csv in cleaned data folder 
+write_csv(demo03_04C,"demo03_04C.csv")
+
+
+#BMI
+BMI03_04<-read_xpt("BMX_2003-2004.XPT")
+
+BMI03_04C<-BMI03_04%>%
+  select(SEQN, BMXBMI)%>% 
+  arrange(SEQN)
+
+write_csv(BMI03_04C,"BMI03_04C.csv")
+
+#Exposure (FI)
+FSQ03_04<-read_xpt("FSQ_C.XPT_2003_2004") #change the letter!
+
+FSQ03_04C<-FSQ03_04%>%
+  select(SEQN,FSDHH,FSDAD,FSDCH)%>%
+  arrange(SEQN)
+
+
+write_csv(FSQ03_04C,"FSQ03_04C.csv")
+
+#Outcome (PHTH)
+
+PHTH03_04<-read_xpt("PHTHTE_C.XPT_2003_2004")
+
+PHTH03_04C <- PHTH03_04 %>%
+  arrange(SEQN)
+
+write_csv(PHTH03_04C,"PHTH03_04C.csv")
+
+
+#Creatinine 
+
+L16_C<-read_xpt("L16_C.xpt")
+
+L16_CC<- L16_C %>%
+   select(SEQN,URXUCR,URXUCRSI)%>%
+  arrange(SEQN) 
+
+write_csv(L16_CC,"L16_CC.csv")
+
+# then Merge datasets
+dat1_03_04 <- merge(BMI03_04C, demo03_04C, by = "SEQN") #first two
+dat2_03_04 <- merge(dat1_03_04, FSQ03_04C, by = "SEQN") #merge the first mereged with the third dataset
+dat3_03_04 <- merge(dat2_03_04, PHTH03_04C, by = "SEQN") #third merge
+dat4_03_04<- merge(dat3_03_04, L16_CC, by = "SEQN")#final merge
+
+
+# Drop the merge indicator columns
+dat4_03_04<- dat4_03_04%>% 
+  mutate(cycleyr=3)
+
+print(dat4_03_04)
+#2697 observations and 48 columns
+
+# Save the modified dataset to a new CSV file
+FullData_2003_2004<-dat4_03_04
+
+#save csv file 
+write_csv(dat4_03_04, file.path(folder_path, "FullData_2003_2004.csv"))
+```
+
+
+
+```{r}
+#2005-2006 
+#Demographics 
+
+demo05_06<-read_xpt("DEMO_D.XPT_2005_2006")
+demo05_06C<- demo05_06 %>% 
+  select( SEQN,SDDSRVYR,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC3,DMDEDUC2,DMDMARTL,INDFMPIR,RIDEXPRG, WTMEC2YR,SDMVPSU,SDMVSTRA) %>%
+  arrange(SEQN)
+
+
+#save the file as csv in cleaned data folder 
+write_csv(demo05_06C,"demo05_06C.csv")
+
+
+#BMI
+BMI05_06<-read_xpt("BMX_2005-2006.XPT")
+
+BMI05_06C<-BMI05_06%>%
+  select(SEQN, BMXBMI)%>% 
+  arrange(SEQN)
+
+write_csv(BMI05_06C,"BMI05_06C.csv")
+
+
+#Exposure (FI)
+FSQ05_06<-read_xpt("FSQ_D.XPT_2005_2006") #change the letter!
+
+FSQ05_06C<-FSQ05_06%>%
+  select(SEQN,FSDHH,FSDAD,FSDCH)%>%
+  arrange(SEQN)
+
+
+write_csv(FSQ05_06C,"FSQ05_06C.csv")
+
+#Outcome (PHTH)
+
+PHTH05_06<-read_xpt("PHTHTE_D.XPT_2005_2006")
+
+PHTH05_06C <- PHTH05_06 %>%
+  arrange(SEQN)
+
+write_csv(PHTH05_06C,"PHTH05_06C.csv")
+
+#Creatinine 
+
+ALB_CR_DC<-read_xpt("ALB_CR_D.xpt")
+
+ALB_CR_DC<- ALB_CR_DC %>%
+   select(SEQN,URXUCR,URXCRS)%>%
+  arrange(SEQN) 
+
+write_csv(ALB_CR_DC,"ALB_CR_DC.csv")
+
+# then Merge datasets
+dat1_05_06 <- merge(BMI05_06C, demo05_06C, by = "SEQN") #first two
+dat2_05_06 <- merge(dat1_05_06, FSQ05_06C, by = "SEQN") #merge the first mereged with the third dataset
+dat3_05_06 <- merge(dat2_05_06, PHTH05_06C, by = "SEQN") #third merge
+dat4_05_06<- merge(dat3_05_06, ALB_CR_DC, by = "SEQN")#final merge
+
+
+# Drop the merge indicator columns
+dat4_05_06<-dat4_05_06%>% 
+  mutate(cycleyr=4)
+
+print(dat4_05_06)
+#2638 observations and 50 columns :)
+
+# Save the modified dataset to a new CSV file
+FullData_2005_2006<-dat4_05_06
+
+
+#save csv file 
+write_csv(FullData_2005_2006, file.path(folder_path, "FullData_2005_2006.csv"))
+
+```
+
+
+
+```{r}
+#2007-2008 
+
+#BMI
+BMI07_08<-read_xpt("BMX_2007-2008.XPT")
+
+BMI07_08C<-BMI07_08%>%
+  select(SEQN, BMXBMI)%>% 
+  arrange(SEQN)
+
+write_csv(BMI07_08C,"BMI07_08C.csv")
+
+#Demographics 
+demo07_08<-read_xpt("DEMO_E.XPT_2007_2008")
+demo07_08C<- demo07_08 %>% 
+  select( SEQN,SDDSRVYR,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC3,DMDEDUC2,DMDMARTL,INDFMPIR,RIDEXPRG, WTMEC2YR,SDMVPSU,SDMVSTRA) %>%
+  arrange(SEQN)
+
+
+#save the file as csv in cleaned data folder 
+write_csv(demo07_08C,"demo07_08C.csv")
+
+#Exposure (FI)
+FSQ07_08<-read_xpt("FSQ_E.XPT_2007_2008") #change the letter!
+
+FSQ07_08C<-FSQ07_08%>%
+  select(SEQN,FSDHH,FSDAD,FSDCH)%>%
+  arrange(SEQN)
+
+
+write_csv(FSQ07_08C,"FSQ07_08C.csv")
+
+#Outcome (PHTH)
+
+PHTH07_08<-read_xpt("PHTHTE_E.XPT_2007_2008")
+
+PHTH07_08C <- PHTH07_08 %>%
+  arrange(SEQN)
+
+write_csv(PHTH07_08C,"PHTH07_08C.csv")
+
+
+#Creatinine 
+ALB_CR_EC<-read_xpt("ALB_CR_E.xpt")
+
+ALB_CR_EC<- ALB_CR_EC %>%
+   select(SEQN,URXUCR,URXCRS)%>%
+  arrange(SEQN) 
+
+write_csv(ALB_CR_EC,"ALB_CR_EC.csv")
+
+
+# then Merge datasets
+dat1_07_08 <- merge(BMI07_08C, demo07_08C, by = "SEQN") #first two
+dat2_07_08 <- merge(dat1_07_08, FSQ07_08C, by = "SEQN") #merge the first mereged with the third dataset
+dat3_07_08 <- merge(dat2_07_08, PHTH07_08C, by = "SEQN") #third merge
+dat4_07_08<- merge(dat3_07_08, ALB_CR_EC, by = "SEQN")#final merge
+
+
+
+# Drop the merge indicator columns
+dat4_07_08 <- dat4_07_08%>% 
+  mutate(cycleyr=5)
+
+print(dat4_07_08)
+#2718 observations and 50 columns:)
+
+
+# Save the modified dataset to a new CSV file
+FullData_2007_2008<-dat4_07_08
+#save csv file 
+write_csv(FullData_2007_2008, file.path(folder_path, "FullData_2007_2008.csv"))
+```
+
+
+
+```{r}
+
+#2009-2010 
+
+#BMI
+BMI09_10<-read_xpt("BMX_2009-2010.XPT")
+
+BMI09_10C<-BMI09_10%>%
+  select(SEQN, BMXBMI)%>% 
+  arrange(SEQN)
+
+write_csv(BMI09_10C,"BMI09_10C.csv")
+
+#Demographics 
+demo09_10<-read_xpt("DEMO_F.XPT_2009_2010")
+demo09_10C<- demo09_10%>% 
+  select( SEQN,SDDSRVYR,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC3,DMDEDUC2,DMDMARTL,INDFMPIR,RIDEXPRG, WTMEC2YR,SDMVPSU,SDMVSTRA) %>%
+  arrange(SEQN)
+
+
+#save the file as csv in cleaned data folder 
+write_csv(demo09_10C,"demo09_10C.csv")
+
+#Exposure (FI)
+FSQ09_10<-read_xpt("FSQ_F.XPT_2009_2010") #change the letter!
+
+FSQ09_10C<-FSQ09_10%>%
+  select(SEQN,FSDHH,FSDAD,FSDCH)%>%
+  arrange(SEQN)
+
+
+write_csv(FSQ09_10C,"FSQ09_10C.csv")
+
+#Outcome (PHTH)
+
+PHTH09_10<-read_xpt("PHTHTE_F.XPT_2009_2010")
+
+PHTH09_10C <- PHTH09_10 %>%
+  arrange(SEQN)
+
+write_csv(PHTH09_10C,"PHTH09_10C.csv")
+
+
+#Creatinine 
+
+ALB_CR_FC<-read_xpt("ALB_CR_F.xpt")
+
+ALB_CR_FC<- ALB_CR_FC %>%
+   select(SEQN,URXUCR,URXCRS)%>%
+  arrange(SEQN) 
+
+write_csv(ALB_CR_FC,"ALB_CR_FC.csv")
+
+# then Merge datasets
+dat1_09_10<- merge(BMI09_10C, demo09_10C, by = "SEQN") #first two
+dat2_09_10<- merge(dat1_09_10, FSQ09_10C, by = "SEQN") #merge the first mereged with the third dataset
+dat3_09_10<- merge(dat2_09_10, PHTH09_10C, by = "SEQN") #third merge
+dat4_09_10<- merge(dat3_09_10, ALB_CR_FC, by = "SEQN")#final merge
+
+
+# Drop the merge indicator columns
+dat4_09_10<-dat4_09_10%>% 
+  mutate(cycleyr=6) #change cycle year!!
+
+print(dat4_09_10)
+#2819 observations and 52 columns :)
+
+# Save the modified dataset to a new CSV file
+FullData_2009_2010<-dat4_09_10
+
+#save csv file 
+write_csv(FullData_2009_2010, file.path(folder_path, "FullData_2009_2010.csv"))
+
+```
+
+```{r}
+#2011-2012 
+
+#BMI
+BMI11_12<-read_xpt("BMX_2011-2012.XPT")
+
+BMI11_12C<-BMI11_12%>%
+  select(SEQN, BMXBMI)%>% 
+  arrange(SEQN)
+
+write_csv(BMI11_12C,"BMI11_12C.csv")
+
+#Demographics 
+demo11_12<-read_xpt("DEMO_G.XPT_2011_2012")
+demo11_12C<- demo11_12 %>% 
+  select( SEQN,SDDSRVYR,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC3,DMDEDUC2,DMDMARTL,INDFMPIR,RIDEXPRG, WTMEC2YR,SDMVPSU,SDMVSTRA) %>%
+  arrange(SEQN)
+
+
+#save the file as csv in cleaned data folder 
+write_csv(demo11_12C,"demo11_12C.csv")
+
+
+#Exposure (FI)
+FSQ11_12<-read_xpt("FSQ_G.XPT_2011_2012") #change the letter!
+
+FSQ11_12C<-FSQ11_12%>%
+  select(SEQN,FSDHH,FSDAD,FSDCH)%>%
+  arrange(SEQN)
+
+
+write_csv(FSQ11_12C,"FSQ11_12C.csv")
+
+#Outcome (PHTH)
+
+PHTH11_12<-read_xpt("PHTHTE_G.XPT_2011_2012")
+
+PHTH11_12C <- PHTH11_12 %>%
+  arrange(SEQN)
+
+write_csv(PHTH11_12C,"PHTH11_12C.csv")
+
+#Creatinine 
+
+ALB_CR_GC<-read_xpt("ALB_CR_G.xpt")
+
+ALB_CR_GC<- ALB_CR_GC %>%
+   select(SEQN,URXUCR,URXCRS)%>%
+  arrange(SEQN) 
+
+write_csv(ALB_CR_GC,"ALB_CR_GC.csv")
+
+# then Merge datasets
+dat1_11_12 <- merge(BMI11_12C, demo11_12C, by = "SEQN") #first two
+dat2_11_12 <- merge(dat1_11_12, FSQ11_12C, by = "SEQN") #merge the first mereged with the third dataset
+dat3_11_12 <- merge(dat2_11_12, PHTH11_12C, by = "SEQN") #third merge
+dat4_11_12<- merge(dat3_11_12, ALB_CR_GC, by = "SEQN")#final merge
+
+
+# Drop the merge indicator columns
+dat4_11_12 <- dat4_11_12%>% 
+  mutate(cycleyr=7) #change cycle year!!
+
+print(dat4_11_12)
+
+#2594 observations and 50 columns 
+
+# Save the modified dataset to a new CSV file
+FullData_2011_2012<-dat4_11_12
+
+
+#save csv file 
+write_csv(FullData_2011_2012, file.path(folder_path, "FullData_2011_2012.csv"))
+```
+
+```{r}
+#2013-2014 
+
+#BMI
+BMI13_14<-read_xpt("BMX_2013-2014.XPT")
+
+BMI13_14C<-BMI13_14%>%
+  select(SEQN, BMXBMI)%>% 
+  arrange(SEQN)
+
+write_csv(BMI13_14C,"BMI13_14C.csv")
+
+#Demographics
+demo13_14<-read_xpt("DEMO_H.XPT_2013_2014")
+demo13_14C<- demo13_14 %>% 
+  select( SEQN,SDDSRVYR,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC3,DMDEDUC2,DMDMARTL,INDFMPIR,RIDEXPRG, WTMEC2YR,SDMVPSU,SDMVSTRA) %>%
+  arrange(SEQN)
+
+
+#save the file as csv in cleaned data folder 
+write_csv(demo13_14C,"demo13_14C.csv")
+
+#Exposure (FI)
+FSQ13_14<-read_xpt("FSQ_H.XPT_2013_2014") #change the letter!
+
+FSQ13_14C<-FSQ13_14%>%
+  select(SEQN,FSDHH,FSDAD,FSDCH)%>%
+  arrange(SEQN)
+
+
+write_csv(FSQ13_14C,"FSQ13_14C.csv")
+
+#Outcome (PHTH)
+
+PHTH13_14<-read_xpt("PHTHTE_H.XPT_2013_2014")
+
+PHTH13_14C <- PHTH13_14 %>%
+  arrange(SEQN)
+
+write_csv(PHTH13_14C,"PHTH13_14C.csv")
+
+#Creatinine 
+
+ALB_CR_HC<-read_xpt("ALB_CR_H.xpt")
+
+ALB_CR_HC<- ALB_CR_HC %>%
+   select(SEQN,URXUCR,URXCRS)%>%
+  arrange(SEQN) 
+
+write_csv(ALB_CR_HC,"ALB_CR_HC.csv")
+
+# then Merge datasets
+dat1_13_14 <- merge(BMI13_14C, demo13_14C, by = "SEQN") #first two
+dat2_13_14 <- merge(dat1_13_14, FSQ13_14C, by = "SEQN") #merge the first mereged with the third dataset
+dat3_13_14 <- merge(dat2_13_14, PHTH13_14C, by = "SEQN") #third merge
+dat4_13_14<- merge(dat3_13_14, ALB_CR_HC, by = "SEQN")#final merge
+
+
+# Drop the merge indicator columns
+dat4_13_14 <-dat4_13_14%>% 
+  mutate(cycleyr=8) #change cycle year!!
+
+print(dat4_13_14)
+#2777 observations and 48 columns :)
+
+
+# Save the modified dataset to a new CSV file
+FullData_2013_2014<-dat4_13_14
+
+
+#save csv file 
+write_csv(FullData_2013_2014, file.path(folder_path, "FullData_2013_2014.csv"))
+```
+
+
+
+```{r}
+#2015-2016 
+
+#BMI
+BMI15_16<-read_xpt("BMX_2015-2016.XPT")
+
+BMI15_16C<-BMI15_16%>%
+  select(SEQN, BMXBMI)%>% 
+  arrange(SEQN)
+
+write_csv(BMI15_16C,"BMI15_16C.csv")
+
+#Demographics
+demo15_16<-read_xpt("DEMO_I.XPT_2015_2016")
+demo15_16C<- demo15_16 %>% 
+  select( SEQN,SDDSRVYR,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC3,DMDEDUC2,DMDMARTL,INDFMPIR,RIDEXPRG, WTMEC2YR,SDMVPSU,SDMVSTRA) %>%
+  arrange(SEQN)
+
+#save the file as csv in cleaned data folder 
+write_csv(demo15_16C,"demo15_16C.csv")
+
+#Exposure (FI)
+FSQ15_16<-read_xpt("FSQ_I.XPT_2015_2016") #change the letter!
+
+FSQ15_16C<-FSQ15_16%>%
+  select(SEQN,FSDHH,FSDAD,FSDCH)%>%
+  arrange(SEQN)
+
+write_csv(FSQ15_16C,"FSQ15_16C.csv")
+
+#Outcome (PHTH)
+PHTH15_16<-read_xpt("PHTHTE_I.XPT_2015_2016")
+
+PHTH15_16C <- PHTH15_16 %>%
+  arrange(SEQN)
+
+write_csv(PHTH15_16C,"PHTH15_16C.csv")
+
+#Creatinine 
+
+ALB_CR_IC<-read_xpt("ALB_CR_I.xpt")
+
+ALB_CR_IC<- ALB_CR_IC %>%
+   select(SEQN,URXUCR,URXCRS)%>%
+  arrange(SEQN) 
+
+write_csv(ALB_CR_IC,"ALB_CR_IC.csv")
+# then Merge datasets
+dat1_15_16 <- merge(BMI15_16C, demo15_16C, by = "SEQN") #first two
+dat2_15_16 <- merge(dat1_15_16, FSQ15_16C, by = "SEQN") #merge the first mereged with the third dataset
+dat3_15_16 <- merge(dat2_15_16, PHTH15_16C, by = "SEQN") #third merge
+dat4_15_16<- merge(dat3_15_16, ALB_CR_IC, by = "SEQN")#final merge
+
+
+# Drop the merge indicator columns
+dat4_15_16 <-dat4_15_16%>% 
+  mutate(cycleyr=9) #change cycle year!!
+
+print(dat4_15_16)
+#3205 observations and 51 columns :)
+
+# Save the modified dataset to a new CSV file
+FullData_2015_2016<-dat4_15_16
+
+#save csv file 
+write_csv(FullData_2015_2016, file.path(folder_path, "FullData_2015_2016.csv"))
+```
+
+
+```{r}
+#2017-2018 
+
+#BMI
+BMI17_18<-read_xpt("BMX_2017-2018.XPT")
+
+BMI17_18C<-BMI17_18%>%
+  select(SEQN, BMXBMI)%>% 
+  arrange(SEQN)
+
+write_csv(BMI17_18C,"BMI17_18C.csv")
+
+#Demographics
+demo17_18<-read_xpt("DEMO_J.XPT_2017_2018")
+demo17_18C<- demo17_18 %>% 
+  select( SEQN,SDDSRVYR,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC3,DMDEDUC2,DMDMARTL,INDFMPIR,RIDEXPRG, WTMEC2YR,SDMVPSU,SDMVSTRA) %>%
+  arrange(SEQN)
+
+
+#save the file as csv in cleaned data folder 
+write_csv(demo17_18C,"demo17_18C.csv")
+
+
+#Exposure (FI)
+FSQ17_18<-read_xpt("FSQ_J.XPT_2017_2018") #change the letter!
+
+FSQ17_18C<-FSQ17_18%>%
+  select(SEQN,FSDHH,FSDAD,FSDCH)%>%
+  arrange(SEQN)
+
+write_csv(FSQ17_18C,"FSQ17_18C.csv")
+
+#Outcome (PHTH)
+PHTH17_18<-read_xpt("PHTHTE_J.XPT_2017_2018")
+
+PHTH17_18C <- PHTH17_18 %>%
+  arrange(SEQN)
+
+write_csv(PHTH17_18C,"PHTH17_18C.csv")
+
+#Creatinine 
+
+ALB_CR_JC<-read_xpt("ALB_CR_J.xpt")
+
+ALB_CR_JC<- ALB_CR_JC %>%
+   select(SEQN,URXUCR,URXCRS)%>%
+  arrange(SEQN) 
+
+# then Merge datasets
+dat1_17_18 <- merge(BMI17_18C, demo17_18C, by = "SEQN") #first two
+dat2_17_18 <- merge(dat1_17_18, FSQ17_18C, by = "SEQN") #merge the first mereged with the third dataset
+dat3_17_18 <- merge(dat2_17_18, PHTH17_18C, by = "SEQN") #third merge
+dat4_17_18<- merge(dat3_17_18, ALB_CR_JC, by = "SEQN")#final merge
+
+
+# Drop the merge indicator columns
+dat4_17_18 <- dat4_17_18%>% 
+  mutate(cycleyr=10) #change cycle year!!
+
+print(dat4_17_18)
+#2986 observations and 59 columns :)
+
+
+# Save the modified dataset to a new CSV file
+FullData_2017_2018<-dat4_17_18
+
+#save csv file 
+write_csv(FullData_2017_2018, file.path(folder_path, "FullData_2017_2018.csv"))
+```
+
+
+Check first for missingness in what will eventually be used for your survey weighting (see Mitro powerpoint from previous email)
+
+#Combine Datasets
+```{r}
+#combine all the datasets! 
+
+
+#check missing 
+sum(is.na(FullData_1999_2000$SDMVSTRA))
+#0 missing
+sum(is.na(FullData_1999_2000$SDMVPSU))
+#0 missing 
+sum(is.na(FullData_2001_2002$SDMVSTRA))
+#0 missing 
+sum(is.na(FullData_2001_2002$SDMVPSU))
+#0 missing
+sum(is.na(FullData_2003_2004$SDMVSTRA)) #0 missing
+sum(is.na(FullData_2003_2004$SDMVPSU)) #0 missing
+
+
+
+#merge all datasets into one: 
+FullData_allcycles<-bind_rows(
+  FullData_1999_2000,
+  FullData_2001_2002,
+  FullData_2003_2004,
+  FullData_2005_2006,
+  FullData_2007_2008,
+  FullData_2009_2010,
+  FullData_2011_2012,
+  FullData_2013_2014,
+  FullData_2015_2016,
+  FullData_2017_2018
+)
+
+print(FullData_allcycles)
+sum(is.na(FullData_allcycles$SDMVPSU))
+sum(is.na(FullData_allcycles$SDMVSTRA))
+sum(is.na(FullData_allcycles$SURVWEIGHT))
+
+#27,983 observations and 87 variables :)
+
+write_csv(FullData_allcycles,"/Users/marshaenickelberry/Documents/Github/EDC_FI/Data_cleaned")#replace with your path name for folder
+```
+
+Quick note on bind vs merge: 
+merge() combines datasets by matching rows on a key variable (like SEQN).
+
+bind_rows() stacks data on top of each other (adds more rows) without matching.
+
+bind_cols() puts datasets side-by-side (adds columns) without matching.
