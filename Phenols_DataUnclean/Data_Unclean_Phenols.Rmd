@@ -265,6 +265,13 @@ write_csv(PHE09_10C,"PHE09_10C.csv")
 
 
 #creatinine
+ALB_CR_F<-read_xpt("2009_2010_ALB_CR_F.xpt")
+
+ALB_CR_FC<- ALB_CR_F %>%
+   select(SEQN,URXUCR)%>%
+  arrange(SEQN) 
+
+write_csv(ALB_CR_FC,"ALB_CR_FC.csv")
 
 # Merge datasets
 dat1_09_10<- merge(FAST09_10C, demo09_10C, by = "SEQN") #first two, base function is innerjoin.
@@ -315,16 +322,19 @@ write_csv(FSQ11_12C,"FSQ11_12C.csv")
 PHE11_12<-read_xpt("2011_2012_EPH_G.xpt")
 
 PHE11_12C <- PHE11_12%>%
-  select(SEQN,URXBPH, URXBP3, URXTRS, URXBUP, URXPPB, URXEPB, URXMPB)%>%
-  arrange(SEQN)
-
-PHE11_12C <- PHE11_12%>%
   select(SEQN,colnames(PHE11_12[2:17]))%>% 
   arrange(SEQN)
 
 write_csv(PHE11_12C,"PHE11_12C.csv")
 
 #creatinine
+ALB_CR_G<-read_xpt("2009_2010_ALB_CR_G.xpt")
+
+ALB_CR_GC<- ALB_CR_G %>%
+   select(SEQN,URXUCR)%>%
+  arrange(SEQN) 
+
+write_csv(ALB_CR_G,"ALB_CR_G.csv")
 
 
 # Merge datasets
@@ -384,7 +394,13 @@ PHE13_14C <- PHE13_14%>%
 write_csv(PHE13_14C,"PHE13_14C.csv")
 
 #creatinine
+ALB_CR_H<-read_xpt("2013_2014_ALB_CR_H.xpt")
 
+ALB_CR_HC<- ALB_CR_H %>%
+   select(SEQN,URXUCR)%>%
+  arrange(SEQN) 
+
+write_csv(ALB_CR_H,"ALB_CR_H.csv")
 
 # Merge datasets
 dat1_13_14<- merge(FAST13_14C, demo13_14C, by = "SEQN") #first two, base function is innerjoin.
@@ -445,6 +461,13 @@ PHE15_16C <-  PHE15_16%>%
 write_csv(PHE15_16C,"PHE15_16C.csv")
 
 #creatinine
+ALB_CR_I<-read_xpt("2015_2016_ALB_CR_I.xpt")
+
+ALB_CR_IC<- ALB_CR_I %>%
+   select(SEQN,URXUCR)%>%
+  arrange(SEQN) 
+
+write_csv(ALB_CR_I,"ALB_CR_I.csv")
 
 
 # Merge datasets
