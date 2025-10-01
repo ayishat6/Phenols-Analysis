@@ -75,16 +75,20 @@ write_csv(L16_CC,"L16_CC.csv")
 dat1_03_04<- merge(FAST03_04C, demo03_04C, by = "SEQN") #first two, base function is innerjoin.
 dat2_03_04<- merge(dat1_03_04, FSQ03_04C, by = "SEQN") #merge the first mereged with the third dataset
 dat3_03_04<- merge(dat2_03_04, PHE03_04C, by = "SEQN") #third merge
-
+dat4_03_04<- merge(dat3_03_04, L16_CC, by = "SEQN")#final merge
 
 # create cycleyr
-dat3_03_04<-dat3_03_04%>%
+dat4_03_04<-dat4_03_04%>%
   mutate(cycleyr=1)
 
+print(dat4_03_04)
+#2612 observations and 19 columns
 
+# Save the modified dataset to a new CSV file
+FullData_2003_2004<-dat4_03_04
 
 #write csv file 
-write.csv(dat3_03_04, "FullData_2003_2004.csv") #save csv file
+write.csv(dat4_03_04, "FullData_2003_2004.csv") #save csv file
 ```
 
 
@@ -143,15 +147,21 @@ write_csv(ALB_CR_DC,"ALB_CR_DC.csv")
 dat1_05_06<- merge(FAST05_06C, demo05_06C, by = "SEQN") #first two, base function is innerjoin.
 dat2_05_06<- merge(dat1_05_06, FSQ05_06C, by = "SEQN") #merge the first mereged with the third dataset
 dat3_05_06<- merge(dat2_05_06, PHE05_06C, by = "SEQN") #third merge
+dat4_05_06<- merge(dat3_05_06, ALB_CR_DC, by = "SEQN")
 
 
 # create cycleyr
-dat3_05_06<-dat3_05_06%>%
+dat4_05_06<-dat4_05_06%>%
   mutate(cycleyr=2)
 
+print(dat4_05_06)
+#2638 observations and 17 columns
+
+# Save the modified dataset to a new CSV file
+FullData_2005_2006<-dat4_05_06
 
 #write csv file 
-write.csv(dat3_05_06, "FullData_2005_2006.csv") #save csv file
+write.csv(dat4_05_06, "FullData_2005_2006.csv") #save csv file
 
 ```
 
@@ -209,11 +219,20 @@ write_csv(ALB_CR_EC,"ALB_CR_EC.csv")
 dat1_07_08<- merge(FAST07_08C, demo07_08C, by = "SEQN") #first two, base function is innerjoin.
 dat2_07_08<- merge(dat1_07_08, FSQ07_08C, by = "SEQN") #merge the first mereged with the third dataset
 dat3_07_08<- merge(dat2_07_08, PHE07_08C, by = "SEQN") #third merge
+dat4_07_08<- merge(dat3_07_08, ALB_CR_EC, by = "SEQN")#final merge
 
 
 # create cycleyr
-dat3_07_08<-dat3_07_08%>%
+dat4_07_08<-dat4_07_08%>%
   mutate(cycleyr=3)
+
+print(dat4_07_08)
+#need help with variables
+
+# Save the modified dataset to a new CSV file
+FullData_2007_2008<-dat4_07_08
+
+write.csv(dat4_07_08, "FullData_2007_2008.csv") #save csv file
 
 ```
 
@@ -277,11 +296,20 @@ write_csv(ALB_CR_FC,"ALB_CR_FC.csv")
 dat1_09_10<- merge(FAST09_10C, demo09_10C, by = "SEQN") #first two, base function is innerjoin.
 dat2_09_10<- merge(dat1_09_10, FSQ09_10C, by = "SEQN") #merge the first mereged with the third dataset
 dat3_09_10<- merge(dat2_09_10, PHE09_10C, by = "SEQN") #third merge
+dat4_09_10<- merge(dat3_09_10, ALB_CR_FC, by = "SEQN")#final merge
 
 
 # create cycleyr
-dat3_09_10<-dat3_09_10%>%
+dat4_09_10<-dat4_09_10%>%
   mutate(cycleyr=4)
+
+print(dat4_09_10)
+#2718 observations and 50 columns:)
+
+# Save the modified dataset to a new CSV file
+FullData_2009_2010<-dat4_09_10
+#save csv file 
+write.csv(dat4_07_08, "FullData_2009_2010.csv") #save csv file
 ```
 
 
@@ -328,24 +356,33 @@ PHE11_12C <- PHE11_12%>%
 write_csv(PHE11_12C,"PHE11_12C.csv")
 
 #creatinine
-ALB_CR_G<-read_xpt("2009_2010_ALB_CR_G.xpt")
+ALB_CR_G<-read_xpt("2011_2012_ALB_CR_G.xpt")
 
 ALB_CR_GC<- ALB_CR_G %>%
    select(SEQN,URXUCR)%>%
   arrange(SEQN) 
 
-write_csv(ALB_CR_G,"ALB_CR_G.csv")
+write_csv(ALB_CR_GC,"ALB_CR_GC.csv")
 
 
 # Merge datasets
 dat1_11_12<- merge(FAST11_12C, demo11_12C, by = "SEQN") #first two, base function is innerjoin.
 dat2_11_12<- merge(dat1_11_12, FSQ11_12C, by = "SEQN") #merge the first mereged with the third dataset
 dat3_11_12<- merge(dat2_11_12, PHE11_12C, by = "SEQN") #third merge
-
+dat4_11_12<- merge(dat3_11_12, ALB_CR_GC, by = "SEQN")#final merge
 
 # create cycleyr
-dat3_11_12<-dat3_11_12%>%
+dat4_11_12<-dat4_11_12%>%
   mutate(cycleyr=5)
+
+print(dat4_11_12)
+#2718 observations and 50 columns:)
+
+# Save the modified dataset to a new CSV file
+FullData_2011_2012<-dat4_11_12
+#save csv file 
+write.csv(dat4_11_12, "FullData_2011_2012.csv") #save csv file
+
 ```
 
 ```{r}
@@ -400,17 +437,25 @@ ALB_CR_HC<- ALB_CR_H %>%
    select(SEQN,URXUCR)%>%
   arrange(SEQN) 
 
-write_csv(ALB_CR_H,"ALB_CR_H.csv")
+write_csv(ALB_CR_HC,"ALB_CR_HC.csv")
 
 # Merge datasets
 dat1_13_14<- merge(FAST13_14C, demo13_14C, by = "SEQN") #first two, base function is innerjoin.
 dat2_13_14<- merge(dat1_13_14, FSQ13_14C, by = "SEQN") #merge the first mereged with the third dataset
 dat3_13_14<- merge(dat2_13_14, PHE13_14C, by = "SEQN") #third merge
+dat4_13_14<- merge(dat3_13_14, ALB_CR_HC, by = "SEQN")#final merge
 
 
 # create cycleyr
-dat3_13_14<-dat3_13_14%>%
+dat4_13_14<-dat4_13_14%>%
   mutate(cycleyr=6)
+
+print(dat4_13_14)
+#2777 observations and 50 columns:)
+
+
+write.csv(dat4_13_14, "FullData_2013_2014.csv") #save csv file
+
 ```
 
 
@@ -467,19 +512,24 @@ ALB_CR_IC<- ALB_CR_I %>%
    select(SEQN,URXUCR)%>%
   arrange(SEQN) 
 
-write_csv(ALB_CR_I,"ALB_CR_I.csv")
+write_csv(ALB_CR_IC,"ALB_CR_IC.csv")
 
 
 # Merge datasets
 dat1_15_16<- merge(FAST15_16C, demo15_16C, by = "SEQN") #first two, base function is innerjoin.
 dat2_15_16<- merge(dat1_15_16, FSQ15_16C, by = "SEQN") #merge the first mereged with the third dataset
 dat3_15_16<- merge(dat2_15_16, PHE15_16C, by = "SEQN") #third merge
+dat4_15_16<- merge(dat3_15_16, ALB_CR_IC, by = "SEQN")#final merge
 
 
 # create cycleyr
-dat3_15_16<-dat3_15_16%>%
+dat4_15_16<-dat4_15_16%>%
   mutate(cycleyr=7)
 
+print(dat4_15_16)
+#2803 observations and 18 columns:)
+
+write.csv(dat4_15_16, "FullData_2015_2016.csv") #save csv file
 
 ```
 
@@ -490,17 +540,24 @@ dat3_15_16<-dat3_15_16%>%
 
 
 #check missing 
-sum(is.na(FullData_1999_2000$SDMVSTRA))
+sum(is.na(FullData_2003_2004$SDMVSTRA))
 #0 missing
-sum(is.na(FullData_1999_2000$SDMVPSU))
+sum(is.na(FullData_2003_2004$SDMVPSU))
 #0 missing 
-sum(is.na(FullData_2001_2002$SDMVSTRA))
+sum(is.na(FullData_2005_2006$SDMVSTRA))
 #0 missing 
-sum(is.na(FullData_2001_2002$SDMVPSU))
+sum(is.na(FullData_2005_2006$SDMVPSU))
 #0 missing
-sum(is.na(FullData_2003_2004$SDMVSTRA)) #0 missing
-sum(is.na(FullData_2003_2004$SDMVPSU)) #0 missing
-
+sum(is.na(FullData_2007_2008$SDMVSTRA)) #0 missing
+sum(is.na(FullData_2007_2008$SDMVPSU)) #0 missing
+sum(is.na(FullData_2009_2010$SDMVSTRA)) #0 missing
+sum(is.na(FullData_2009_2010$SDMVPSU)) #0 missing
+sum(is.na(FullData_2011_2012$SDMVSTRA)) #0 missing
+sum(is.na(FullData_2011_2012$SDMVPSU)) #0 missing
+sum(is.na(FullData_2013_2014$SDMVSTRA)) #0 missing
+sum(is.na(FullData_2013_2014$SDMVPSU)) #0 missing
+sum(is.na(FullData_2015_2016$SDMVSTRA)) #0 missing
+sum(is.na(FullData_2015_2016$SDMVPSU)) #0 missing
 
 
 #merge all datasets into one: 
