@@ -587,6 +587,7 @@ sum(is.na(FullData_allcycles$SURVWEIGHT))
 
 #18,961 observations and 35 variables :)
 
-write_csv(FullData_allcycles,"/Users/ayishatyussuf/Documents/Github/Phenols-Analysis/Phenols_Data_Clean") #replace with your path name for folder
+write_csv(FullData_allcycles,"/Users/ayishatyussuf/Documents/Github/Phenols-Analysis/Phenols_DataClean/FullData_allcycles.csv") #replace with your path name for folder
 ```
+
 
