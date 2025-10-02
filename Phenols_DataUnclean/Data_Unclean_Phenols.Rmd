@@ -380,6 +380,7 @@ print(dat4_11_12)
 
 # Save the modified dataset to a new CSV file
 FullData_2011_2012<-dat4_11_12
+
 #save csv file 
 write.csv(dat4_11_12, "FullData_2011_2012.csv") #save csv file
 
@@ -453,6 +454,8 @@ dat4_13_14<-dat4_13_14%>%
 print(dat4_13_14)
 #2777 observations and 50 columns:)
 
+# Save the modified dataset to a new CSV file
+FullData_2013_2014<-dat4_13_14
 
 write.csv(dat4_13_14, "FullData_2013_2014.csv") #save csv file
 
@@ -529,6 +532,9 @@ dat4_15_16<-dat4_15_16%>%
 print(dat4_15_16)
 #2803 observations and 18 columns:)
 
+# Save the modified dataset to a new CSV file
+FullData_2015_2016<-dat4_15_16
+
 write.csv(dat4_15_16, "FullData_2015_2016.csv") #save csv file
 
 ```
@@ -540,30 +546,31 @@ write.csv(dat4_15_16, "FullData_2015_2016.csv") #save csv file
 
 
 #check missing 
-sum(is.na(FullData_2003_2004$SDMVSTRA))
-#0 missing
-sum(is.na(FullData_2003_2004$SDMVPSU))
-#0 missing 
-sum(is.na(FullData_2005_2006$SDMVSTRA))
-#0 missing 
-sum(is.na(FullData_2005_2006$SDMVPSU))
-#0 missing
+sum(is.na(FullData_2003_2004$SDMVSTRA)) #0 missing
+sum(is.na(FullData_2003_2004$SDMVPSU)) #0 missing
+sum(is.na(FullData_2003_2004$WTSC2YR)) #0 missing
+sum(is.na(FullData_2005_2006$SDMVSTRA)) #0 missing
+sum(is.na(FullData_2005_2006$SDMVPSU)) #0 missing
+sum(is.na(FullData_2005_2006$WTSB2YR)) #0 missing
 sum(is.na(FullData_2007_2008$SDMVSTRA)) #0 missing
 sum(is.na(FullData_2007_2008$SDMVPSU)) #0 missing
+sum(is.na(FullData_2007_2008$WTSB2YR)) #0 missing
 sum(is.na(FullData_2009_2010$SDMVSTRA)) #0 missing
 sum(is.na(FullData_2009_2010$SDMVPSU)) #0 missing
+sum(is.na(FullData_2009_2010$WTSB2YR)) #0 missing
 sum(is.na(FullData_2011_2012$SDMVSTRA)) #0 missing
 sum(is.na(FullData_2011_2012$SDMVPSU)) #0 missing
+sum(is.na(FullData_2011_2012$WTSA2YR)) #43 missing (need to double check this variable)
 sum(is.na(FullData_2013_2014$SDMVSTRA)) #0 missing
 sum(is.na(FullData_2013_2014$SDMVPSU)) #0 missing
+sum(is.na(FullData_2013_2014$WTSB2YR)) #0 missing
 sum(is.na(FullData_2015_2016$SDMVSTRA)) #0 missing
 sum(is.na(FullData_2015_2016$SDMVPSU)) #0 missing
+sum(is.na(FullData_2015_2016$WTSB2YR)) #0 missing
 
 
 #merge all datasets into one: 
 FullData_allcycles<-bind_rows(
-  FullData_1999_2000,
-  FullData_2001_2002,
   FullData_2003_2004,
   FullData_2005_2006,
   FullData_2007_2008,
@@ -571,7 +578,6 @@ FullData_allcycles<-bind_rows(
   FullData_2011_2012,
   FullData_2013_2014,
   FullData_2015_2016,
-  FullData_2017_2018
 )
 
 print(FullData_allcycles)
@@ -579,7 +585,8 @@ sum(is.na(FullData_allcycles$SDMVPSU))
 sum(is.na(FullData_allcycles$SDMVSTRA))
 sum(is.na(FullData_allcycles$SURVWEIGHT))
 
-#27,983 observations and 87 variables :)
+#18,961 observations and 35 variables :)
 
-write_csv(FullData_allcycles,"/Users/marshaenickelberry/Documents/Github/EDC_FI/Data_cleaned")#replace with your path name for folder
+write_csv(FullData_allcycles,"/Users/ayishatyussuf/Documents/Github/Phenols-Analysis/Phenols_Data_Clean") #replace with your path name for folder
 ```
+
