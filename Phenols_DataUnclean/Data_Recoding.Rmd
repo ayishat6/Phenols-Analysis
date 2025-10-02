@@ -54,14 +54,14 @@ FullData_allcycles<-FullData_allcycles%>%
 quartiles<-quantile(FullData_allcycles$RIDAGEYR)
 print(quartiles)
 
-FullData_allcyclesFINAL$AGEGROUP<-cut(
-  FullData_allcyclesFINAL$RIDAGEYR,
+FullData_allcycles$AGEGROUP<-cut(
+  FullData_allcycles$RIDAGEYR,
   breaks=quartiles, 
   include.lowest=TRUE, 
   labels= c("18-31", "32-46", "47-63", "64-85")
 )
 
-summary(FullData_allcyclesFINAL$AGEQ, useNA="ifany") 
+summary(FullData_allcycles$AGEQ, useNA="ifany") 
 #no missing
 table(FullData_allcycles$AGEGROUP, useNA="ifany")
 ```
