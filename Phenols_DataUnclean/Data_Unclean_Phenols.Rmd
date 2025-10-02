@@ -560,7 +560,7 @@ sum(is.na(FullData_2009_2010$SDMVPSU)) #0 missing
 sum(is.na(FullData_2009_2010$WTSB2YR)) #0 missing
 sum(is.na(FullData_2011_2012$SDMVSTRA)) #0 missing
 sum(is.na(FullData_2011_2012$SDMVPSU)) #0 missing
-sum(is.na(FullData_2011_2012$WTSA2YR)) #43 missing (need to double check this variable)
+sum(is.na(FullData_2011_2012$WTSA2YR)) #43 missing
 sum(is.na(FullData_2013_2014$SDMVSTRA)) #0 missing
 sum(is.na(FullData_2013_2014$SDMVPSU)) #0 missing
 sum(is.na(FullData_2013_2014$WTSB2YR)) #0 missing
