@@ -335,6 +335,6 @@ FullData_allcycles <- FullData_allcycles %>%
   ))
 
 
-write_csv(FullData_allcycles, "Phenols-Analysis/Phenols_DataClean/FullData_allcyclesFINAL.csv")
+write_csv(FullData_allcycles, "Phenols_DataClean/FullData_allcyclesFINAL.csv")
 ```
 
