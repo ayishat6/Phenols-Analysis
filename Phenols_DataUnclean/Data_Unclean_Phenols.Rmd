@@ -584,10 +584,12 @@ print(FullData_allcycles)
 sum(is.na(FullData_allcycles$SDMVPSU))
 sum(is.na(FullData_allcycles$SDMVSTRA))
 sum(is.na(FullData_allcycles$SURVWEIGHT))
+sum(is.na())
 
 #18,961 observations and 35 variables :)
 
-write_csv(FullData_allcycles,"/Users/ayishatyussuf/Documents/Github/Phenols-Analysis/Phenols_DataClean/FullData_allcycles.csv") #replace with your path name for folder
+write_csv(FullData_allcycles,"/Users/ayishatyussuf/Documents/Github/Phenols-Analysis/Phenols_DataUnclean/FullData_allcycles.csv") #replace with your path name for folder
+
 ```
 
 
