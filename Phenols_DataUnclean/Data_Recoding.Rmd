@@ -61,7 +61,6 @@ FullData_allcycles$AGEGROUP<-cut(
   labels= c("18-31", "32-46", "47-63", "64-85")
 )
 
-summary(FullData_allcycles$AGEQ, useNA="ifany") 
 #no missing
 table(FullData_allcycles$AGEGROUP, useNA="ifany")
 ```
@@ -184,11 +183,25 @@ summary(FullData_allcycles$URXMPB, na.rm = FALSE) #2115 missing
 summary(FullData_allcycles$URXPPB, na.rm = FALSE) #2115 missing
 ```
 
-Create Sample 2 (final analytic dataset)
+###Create Sample and Sample 2 (final analytic dataset)
 ```{r}
-FullData_allcycles$SAMPLE2 <- FullData_allcycles$SAMPLE
+
+#generate sample (samplepopulation) from nonmissing in exposure/covariates
+FullData_allcycles<-FullData_allcycles %>%
+  mutate(SAMPLE= ifelse(is.na(EDUCAT)| is.na(PIRCAT) | is.na(SEX)| is.na(RACEETH) | is.na(AGEGROUP)| is.na(FOODSEC) | cycleyr==1,0,1))
+
+#if any of these are missing give it a zero OR from cycleyr 1, if not give it a 1. 
+
+summary(FullData_allcycles$SAMPLE)
+table(FullData_allcycles$SAMPLE, useNA="ifany") #10,423
+
+#second sampling variable (missing in outcome, creatinine)
+FullData_allcycles$SAMPLE2<- FullData_allcycles$SAMPLE
 
 names(FullData_allcycles)#check if variable was created
+
+saveRDS(FullData_allcycles, "FullData_allcycles.rds") #run this to save dataset with changes/recoding 
+
 
 ```
 
@@ -207,7 +220,13 @@ Urinary Butyl paraben - URXBUP
 Urinary Propyl paraben - URXPPB
 Urinary Ethyl paraben - URXEPB
 Urinary Methyl paraben - URXMPB
+
+Missingness schema for outcome/creatinine, 
+Remove those who have missing data
+Remove those who are outliers (5 standard deviations above the mean)
 ```{r}
+FullData_allcycles<-readRDS("FullData_allcycles.rds")
+
 # Define metabolites, their raw columns, flag columns, and their respective LOD values
 metabolites <- list(
   BPH = list(raw_col = "URXBPH", flag_col = "URDBPHLC", lod = 0.2), 
@@ -272,7 +291,10 @@ FullData_allcycles$SAMPLE2<-ifelse(
   0, FullData_allcycles$SAMPLE2
 )
 
+```
 
+###LOG Transformations
+```{r}
 #create log transformations now so they are in survey + subesets 
 
 #learning visual look at histogram of normal scale values: 
@@ -345,6 +367,8 @@ FullData_allcycles <- FullData_allcycles %>%
   ))
 
 
-write_csv(FullData_allcycles, "Phenols_DataClean/FullData_allcyclesFINAL.csv")
+write_csv(FullData_allcycles, "~/Documents/Github/Phenols-Analysis/Phenols_DataClean/FullData_allcyclesFINAL.csv")
+
+saveRDS(FullData_allcycles, "~/Documents/Github/Phenols-Analysis/Phenols_DataClean/FullData_allcyclesFINAL.rds")
 ```
 
