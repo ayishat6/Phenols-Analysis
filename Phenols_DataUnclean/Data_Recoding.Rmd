@@ -141,7 +141,7 @@ table(FullData_allcycles$PIRCAT, useNA="ifany")
 
 
 ##CycleYr
-Check levels of cycle year, make sure they match up with your analysis timespan, and check missingness
+Check levels of cycle year, make sure they match up with your analysis time span, and check missingness
 ```{r}
 #cycleyears
 table(FullData_allcycles$cycleyr, useNA="ifany")
@@ -164,13 +164,24 @@ names(FullData_allcycles)
 FullData_allcycles <- FullData_allcycles %>%
   select(-c(URXUCR.x, URXUCR.y))
 
-#BPA
+#URXBPH
 summary(FullData_allcycles$URXBPH, na.rm = FALSE)
-
 #BPF
-
+summary(FullData_allcycles$URXBPF, na.rm = FALSE)
 #BPS
-
+summary(FullData_allcycles$URXBPs, na.rm = FALSE)
+#BP3
+summary(FullData_allcycles$URXBP3, na.rm = FALSE)
+#TRS
+summary(FullData_allcycles$URXTRS, na.rm = FALSE)
+#BUP
+summary(FullData_allcycles$URXBUP, na.rm = FALSE)
+#EPB
+summary(FullData_allcycles$URXEPB, na.rm = FALSE)
+#MPB
+summary(FullData_allcycles$URXMPB, na.rm = FALSE)
+#PPB
+summary(FullData_allcycles$URXPPB, na.rm = FALSE)
 ```
 
 Create Sample 2 (final analytic dataset)
@@ -189,16 +200,16 @@ raw column= phenol concentration (ng/mL), flag_column= below or above LOD?  LOD=
 ```{r}
 # Define metabolites, their raw columns, flag columns, and their respective LOD values
 metabolites <- list(
-  BPH = list(raw_col = "URXBPH", flag_col = "URDBPHLC", lod = 0.2), #example fill in rest 
-  MCPP = list(raw_col = "URXMC1", flag_col = "URDMC1LC", lod = 0.4),
-  MEP = list(raw_col = "URXMEP", flag_col = "URDMEPLC", lod = 1.2),
-  MHP = list(raw_col = "URXMHP", flag_col = "URDMHPLC", lod = 0.8),
-  MIB = list(raw_col = "URXMIB", flag_col = "URDMIBLC", lod = 0.8),
-  MZP = list(raw_col = "URXMZP", flag_col = "URDMZPLC", lod = 0.3),
-  MHH = list(raw_col = "URXMHH", flag_col = "URDMHHLC", lod = 0.4),
-  MOH = list(raw_col = "URXMOH", flag_col = "URDMOHLC", lod = 0.2)
+  BPH = list(raw_col = "URXBPH", flag_col = "URDBPHLC", lod = 0.2), 
+  BPF = list(raw_col = "URXMC1", flag_col = "URDBPFLC", lod = 0.2),
+  BPS = list(raw_col = "URXMEP", flag_col = "URDBPSLC", lod = 0.1),
+  BP3 = list(raw_col = "URXMHP", flag_col = "URDBP3LC", lod = 0.4),
+  TRS = list(raw_col = "URXMIB", flag_col = "URDTRSLC", lod = 1.7),
+  BUP = list(raw_col = "URXMZP", flag_col = "URDBUPLC", lod = 0.1),
+  EPB = list(raw_col = "URXMHH", flag_col = "URDEPBLC", lod = 1.0),
+  MPB = list(raw_col = "URXMOH", flag_col = "URDMPBLC", lod = 1.0),
+  PPB = list (raw_col = "URXPPB", flag_col = "URDPPBLC", lod = 0.1)
 )
-
 
 # Replace flagged values with LOD/sqrt(2) for all metabolites (LEAVE THIS FUNCTION AND RUN AS IS)
 for (metab in names(metabolites)) {
@@ -239,47 +250,73 @@ for (metab in names(metabolites)) {
 ```{r}
 #replace missingness (REPLACE WITH PHENOLS )
 FullData_allcycles$SAMPLE2<-ifelse(
-  is.na(FullData_allcycles$MEP)|
-  is.na(FullData_allcycles$MNBP)|
-  is.na(FullData_allcycles$MIB)|
-  is.na(FullData_allcycles$MCPP)|
-  is.na(FullData_allcycles$MZP)|
-  is.na(FullData_allcycles$MHP)|
-  is.na(FullData_allcycles$MHH)|
-  is.na(FullData_allcycles$MOH),
+  is.na(FullData_allcycles$BPH)|
+  is.na(FullData_allcycles$BPS)|
+  is.na(FullData_allcycles$BP3)|
+  is.na(FullData_allcycles$BPF)|
+  is.na(FullData_allcycles$TRS)|
+  is.na(FullData_allcycles$BUP)|
+  is.na(FullData_allcycles$EPB)|
+  is.na(FullData_allcycles$PPB)|  
+  is.na(FullData_allcycles$MPB),
   0, FullData_allcycles$SAMPLE2
 )
-
-
 
 
 #create log transformations now so they are in survey + subesets 
 
 #learning visual look at histogram of normal scale values: 
 
-#MEP (replace with a phenol) 
-hist(FullData_allcycles$MEP)
-
+#BPH
+hist(FullData_allcycles$BPH)
 
 #now log transform and look at the new histogram. You should see difference. 
-FullData_allcycles$MEP_LOG<-log(FullData_allcycles$MEP)
+FullData_allcycles$BPH_LOG<-log(FullData_allcycles$BPH)
 
-hist(FullData_allcycles$MEP_LOG)
+hist(FullData_allcycles$BPH_LOG)
 
+#BP3
+hist(FullData_allcycles$BP3)
+FullData_allcycles$BP3_LOG<-log(FullData_allcycles$BP3)
+hist(FullData_allcycles$BP3_LOG)
 
+#BPF
+hist(FullData_allcycles$BPF)
+FullData_allcycles$BPF_LOG<-log(FullData_allcycles$BPF)
+hist(FullData_allcycles$BPF_LOG)
 
-#log transform remaining phenols 
-FullData_allcycles$MEP_LOG<-log(FullData_allcycles$MEP)
-FullData_allcycles$MNBP_LOG<-log(FullData_allcycles$MNBP)
-FullData_allcycles$MIB_LOG<-log(FullData_allcycles$MIB)
-FullData_allcycles$MCPP_LOG<-log(FullData_allcycles$MCPP)
-FullData_allcycles$MZP_LOG<-log(FullData_allcycles$MZP)
-FullData_allcycles$MHP_LOG<-log(FullData_allcycles$MHP)
-FullData_allcycles$MHH_LOG<-log(FullData_allcycles$MHH)
-FullData_allcycles$MOH_LOG<-log(FullData_allcycles$MOH)
+#BPS
+hist(FullData_allcycles$BPS)
+FullData_allcycles$BPS_LOG<-log(FullData_allcycles$BPS)
+hist(FullData_allcycles$BPS_LOG)
+
+#TRS
+hist(FullData_allcycles$TRS)
+FullData_allcycles$TRS_LOG<-log(FullData_allcycles$TRS)
+hist(FullData_allcycles$TRS_LOG)
+
+#BUP
+hist(FullData_allcycles$BUP)
+FullData_allcycles$BUP_LOG<-log(FullData_allcycles$BUP)
+hist(FullData_allcycles$BUP_LOG)
+
+#EPB
+hist(FullData_allcycles$EPB)
+FullData_allcycles$EPB_LOG<-log(FullData_allcycles$EPB)
+hist(FullData_allcycles$EPB_LOG)
+
+#MPB
+hist(FullData_allcycles$MPB)
+FullData_allcycles$MPB_LOG<-log(FullData_allcycles$MPB)
+hist(FullData_allcycles$MPB_LOG)
+
+#PPB
+hist(FullData_allcycles$PPB)
+FullData_allcycles$PPB_LOG<-log(FullData_allcycles$PPB)
+hist(FullData_allcycles$PPB_LOG)
+
 
 ```
-
 
 
 ##Weights
@@ -287,12 +324,17 @@ FullData_allcycles$MOH_LOG<-log(FullData_allcycles$MOH)
 #change survey weights 
 FullData_allcycles <- FullData_allcycles %>%
   mutate(SURVWEIGHT = case_when(
-    cycleyr >= 1 & !is.na(WTMEC2YR) ~ WTMEC2YR * (1 / 10),
+    cycleyr >= 1 & !is.na(WTSC2YR) ~ WTSC2YR * (1 / 7),
+    cycleyr >= 2 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
+    cycleyr >= 3 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
+    cycleyr >= 4 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
+    cycleyr >= 5 & !is.na(WTSA2YR) ~ WTSA2YR * (1 / 7),
+    cycleyr >= 6 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
+    cycleyr >= 7 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
     TRUE ~ NA_real_
   ))
 
 
-write_csv(FullData_allcycles, "Phenols_DataClean/FullData_allcyclesFINAL.csv")
-
+write_csv(FullData_allcycles, "Phenols-Analysis/Phenols_DataClean/FullData_allcyclesFINAL.csv")
 ```
 
