@@ -20,7 +20,7 @@ library(ggplot2) #creating data visualizations/plots
 
 #Load File
 ```{r}
-FullData_allcycles<-read.csv("~/Documents/Github/Phenols-Analysis/Phenols_DataClean/FullData_allcycles.csv")
+FullData_allcycles<-read.csv("~/Documents/Github/Phenols-Analysis/Phenols_DataUnclean/FullData_allcycles.csv")
 ```
 
 ##Food Security
@@ -370,5 +370,9 @@ FullData_allcycles <- FullData_allcycles %>%
 write_csv(FullData_allcycles, "~/Documents/Github/Phenols-Analysis/Phenols_DataClean/FullData_allcyclesFINAL.csv")
 
 saveRDS(FullData_allcycles, "~/Documents/Github/Phenols-Analysis/Phenols_DataClean/FullData_allcyclesFINAL.rds")
+```
+
+```{r}
+summary(FullData_allcycles$SDMVPSU)
 ```
 

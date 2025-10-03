@@ -89,7 +89,9 @@ FullData_allcyclesFINAL$PIRCAT <- factor(FullData_allcyclesFINAL$PIRCAT)#ayishat
 
 FullData_allcyclesFINAL$FOODSEC <- factor(FullData_allcyclesFINAL$FOODSEC, levels = c(1, 2, 3, 4)) #replace labels, 
 
-FullData_allcyclesFINAL$cycleyr <- factor(FullData_allcyclesFINAL$cycleyr) #levels, lables (cycle year interval)
+FullData_allcyclesFINAL$cycleyr <- factor(FullData_allcyclesFINAL$cycleyr, levels = ) #levels, lables (cycle year interval)
+
+levels(FullData_allcyclesFINAL$cycleyr)
 
 names(FullData_allcyclesFINAL)
 ```
@@ -107,8 +109,12 @@ survey <-svydesign(ids = ~SDMVPSU,
          nest = TRUE, 
          data = FullData_allcyclesFINAL)
 
-summary(survey)
+
+surveysubset<-subset(survey,SAMPLE2==1)
+summary(surveysubset)
 ```
+
+
 
 ```{r, echo=FALSE}
 

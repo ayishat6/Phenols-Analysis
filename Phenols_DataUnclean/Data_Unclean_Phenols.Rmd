@@ -590,6 +590,8 @@ sum(is.na(FullData_allcycles$SURVWEIGHT))
 
 write_csv(FullData_allcycles,"~/Documents/Github/Phenols-Analysis/Phenols_DataUnclean/FullData_allcycles.csv") #replace with your path name for folder
 
+
+summary(FullData_allcycles$SD)
 ```
 
 
