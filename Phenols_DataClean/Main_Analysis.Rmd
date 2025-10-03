@@ -1,0 +1,153 @@
+---
+title: "Data Analyis_MainAnalysis"
+author: "Marshae Nickelberry"
+date: "2024-06-24"
+output:
+  html_document: default
+  pdf_document: default
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+# Load packages and datasets
+```{r, echo=FALSE}
+library(here)
+library(knitr)
+library(ggplot2)
+library(ggpubr)
+library(RColorBrewer)
+library(gridExtra)
+library(survey)
+library(tidyr)
+library(dplyr)
+library(expss)
+library(broom)
+library(plyr)
+library(gtsummary)
+library(readxl)
+library(emmeans)
+library(corrplot)
+
+```
+
+## Knit
+
+```{r}
+knitr::opts_knit$set(root.dir = here::here())
+```
+
+## Functions
+```{r}
+# Function to exponentiate coefficients and include additional statistics
+exp_coeffs <- function(model) {
+  # Extract coefficients, standard errors, t-values, and p-values
+  coefs <- summary(model)$coefficients
+  exp_coefs <- exp(coefs[, 1])  # Exponentiated coefficients
+  conf_int <- exp(confint(model))  # Exponentiated confidence intervals
+  
+  # Combine into a data frame
+  exp_results <- data.frame(
+    Term = rownames(coefs),
+    Estimate = exp_coefs,
+    `Std. Error` = coefs[, 2],
+    `t value` = coefs[, 3],
+    `Pr(>|t|)` = coefs[, 4],
+    `2.5 %` = conf_int[, 1],
+    `97.5 %` = conf_int[, 2]
+  )
+  
+  return(exp_results)
+}
+
+```
+
+
+#More Data Transformations
+```{r, include=FALSE}
+FullData_allcyclesFINAL<-read.csv("FullData_allcyclesFINAL.csv")
+
+#FullData_allcyclesFINAL<-readRDS("FullData_allcyclesFINAL.rds")
+
+#change units of creatinine (mg/dl)
+FullData_allcyclesFINAL$URXUCR <- FullData_allcyclesFINAL$URXUCR * 10000
+
+#dropped those with missing creatinine
+FullData_allcyclesFINAL = FullData_allcyclesFINAL[!is.na(FullData_allcyclesFINAL$URXUCR), ] 
+
+
+#rename variables 
+FullData_allcyclesFINAL$SEX <- factor(FullData_allcyclesFINAL$SEX, levels = c(1, 2), labels = c("Male", "Female"))
+
+FullData_allcyclesFINAL$AGEGROUP <- factor(FullData_allcyclesFINAL$AGEGROUP, levels= c("18-31", "32-46", "47-63", "64-85"))
+
+FullData_allcyclesFINAL$RACEETH <- factor(FullData_allcyclesFINAL$RACEETH, levels = c(1,2,3,4,5), labels = c("NH White", "NH Black", "Mexican-American", "Other Hispanic", "Other"))
+
+FullData_allcyclesFINAL$EDUCAT <- factor(FullData_allcyclesFINAL$EDUCAT, levels=c(1,2,3,4), labels=) #ayishat replace (labels)
+
+FullData_allcyclesFINAL$PIRCAT <- factor(FullData_allcyclesFINAL$PIRCAT)#ayishat replace
+
+FullData_allcyclesFINAL$FOODSEC <- factor(FullData_allcyclesFINAL$FOODSEC, levels = c(1, 2, 3, 4)) #replace labels, 
+
+FullData_allcyclesFINAL$cycleyr <- factor(FullData_allcyclesFINAL$cycleyr) #levels, lables (cycle year interval)
+
+names(FullData_allcyclesFINAL)
+```
+
+
+# Survey Package 
+
+now we need to use the survey package to do survey analysis 
+
+
+```{r}
+survey <-svydesign(ids = ~SDMVPSU,
+          strata = ~SDMVSTRA,
+         weights = ~SURVWEIGHT,
+         nest = TRUE, 
+         data = FullData_allcyclesFINAL)
+
+summary(survey)
+```
+
+```{r, echo=FALSE}
+
+#class(surveysubset)
+surveysubset %>% 
+  tbl_svysummary(
+    # Use a character variable here. A factor leads to an error
+    by = FOODSEC,
+    # Use include to select variables
+    include = c(SEX, AGEGROUP, RACEETH, EDUCAT,
+                PIRCAT, cycleyr),
+    statistic = list(all_continuous()  ~ "{mean} ({sd})",
+                     all_categorical() ~ "{n}    ({p}%)"),
+    digits = list( all_categorical() ~ c(0, 1))
+  ) %>%
+  modify_header(
+    label = "**Variable**",
+    all_stat_cols()~"**{level}**")%>%
+  modify_caption("Weighted descriptive statistics, by food security status") %>%
+  bold_labels()
+
+
+
+surveysubset_unweighted<-as.data.frame(surveysubset)
+tbl_summary(
+  surveysubset_unweighted,
+    # Use a character variable here. A factor leads to an error
+    by = FOODSEC,
+    # Use include to select variables
+    include = c(SEX, AGEGROUP, RACEETH, EDUCAT,
+                PIRCAT, cycleyr),
+    statistic = list(all_continuous()  ~ "{mean} ({sd})",
+                     all_categorical() ~ "{n}    ({p}%)"),
+    digits = list( all_categorical() ~ c(0, 1))
+  ) %>%
+  modify_header(
+    label = "**Variable**",
+    all_stat_cols()~"**{level}**")%>%
+  modify_caption("Weighted descriptive statistics, by food security status") %>%
+  bold_labels()%>%
+  add_overall()
+```
