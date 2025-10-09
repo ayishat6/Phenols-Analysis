@@ -41,7 +41,7 @@ FullData_allcycles<-FullData_allcycles%>%
 
 table(FullData_allcycles$FOODSEC,useNA="ifany")
 ```
-
+Marshae Note to Ayishat: 18,961 adult and child population 
 ##Age
 ```{r}
 summary(FullData_allcycles$RIDAGEYR, useNA="ifany")
@@ -65,6 +65,8 @@ FullData_allcycles$AGEGROUP<-cut(
 table(FullData_allcycles$AGEGROUP, useNA="ifany")
 ```
 decided to keep male as reference - september 19th, 2025
+
+Marshae Note to Ayishat: Following removal of children, sample size is now 13,207
 
 ##Sex
 ```{r}
@@ -165,10 +167,10 @@ FullData_allcycles <- FullData_allcycles %>%
 
 #BPH
 summary(FullData_allcycles$URXBPH, na.rm = FALSE) #450 missing
-#BPF
-summary(FullData_allcycles$URXBPF, na.rm = FALSE) #9506 missing
-#BPS
-summary(FullData_allcycles$URXBPS, na.rm = FALSE)  #9506 missing
+##BPF
+#summary(FullData_allcycles$URXBPF, na.rm = FALSE) #9506 missing
+##BPS
+#summary(FullData_allcycles$URXBPS, na.rm = FALSE)  #9506 missing
 #BP3
 summary(FullData_allcycles$URXBP3, na.rm = FALSE) #450 missing
 #TRS
@@ -184,6 +186,8 @@ summary(FullData_allcycles$URXPPB, na.rm = FALSE) #2115 missing
 ```
 
 ###Create Sample and Sample 2 (final analytic dataset)
+
+Marshae Note to Ayishat: Before we generate sample: prior to any missingness removal we have 13207 participants
 ```{r}
 
 #generate sample (samplepopulation) from nonmissing in exposure/covariates
@@ -204,7 +208,7 @@ saveRDS(FullData_allcycles, "FullData_allcycles.rds") #run this to save dataset 
 
 
 ```
-
+Following removal we have 10,423 with exclusion of missing covariates, and exposure data
 
 
 ###Outliers
@@ -212,8 +216,8 @@ saveRDS(FullData_allcycles, "FullData_allcycles.rds") #run this to save dataset 
 raw column= phenol concentration (ng/mL), flag_column= below or above LOD?  LOD= obtained from NHANES documentation (the doc file on NHANES website. You can use last cycle years doc to fill in these values)
 
 Urinary Bisphenol A - URXBPH
-Urinary Bisphenol F - URXBPF
-Urinary Bisphenol S - URXBPS
+Urinary Bisphenol F - URXBPF--EXCLUDE (10/8/25)
+Urinary Bisphenol S - URXBPS --EXCLUDE (10/8/25)
 Urinary 2-Hydroxy-4-metoxybenzophenone (Benzophenone-3) - URXBP3
 Urinary 2,4,4’-Trichloro-2’-hydroxyphenyl ether (Triclosan) - URXTRS
 Urinary Butyl paraben - URXBUP
@@ -224,14 +228,23 @@ Urinary Methyl paraben - URXMPB
 Missingness schema for outcome/creatinine, 
 Remove those who have missing data
 Remove those who are outliers (5 standard deviations above the mean)
+
+
+*MARSHAE NOTES TO AYISHAT: 
+--2003-2004: BPA, Triclsoan, BP3
+--2005-2006: Phenols + Parabens (introduced this year): BPA, BP3, Triclosan, Methyl, Ethyl, Propyl, Butyl Paraben 
+
+Decision: Too restrictive in list previous list. 
+Will start from 2005-2005 and only include: 
+  BPA, BP3, Triclosan, Butyl, Ethyl, Methyl, Propyl Parabens
 ```{r}
 FullData_allcycles<-readRDS("FullData_allcycles.rds")
 
 # Define metabolites, their raw columns, flag columns, and their respective LOD values
 metabolites <- list(
   BPH = list(raw_col = "URXBPH", flag_col = "URDBPHLC", lod = 0.2), 
-  BPF = list(raw_col = "URXBPF", flag_col = "URDBPFLC", lod = 0.2),
-  BPS = list(raw_col = "URXBPS", flag_col = "URDBPSLC", lod = 0.1),
+  #BPF = list(raw_col = "URXBPF", flag_col = "URDBPFLC", lod = 0.2),
+  #BPS = list(raw_col = "URXBPS", flag_col = "URDBPSLC", lod = 0.1),
   BP3 = list(raw_col = "URXBP3", flag_col = "URDBP3LC", lod = 0.4),
   TRS = list(raw_col = "URXTRS", flag_col = "URDTRSLC", lod = 1.7),
   BUP = list(raw_col = "URXBUP", flag_col = "URDBUPLC", lod = 0.1),
@@ -254,7 +267,7 @@ for (metab in names(metabolites)) {
   # For flag columns (i.e., below-detection or missing), replace flagged values with LOD/sqrt(2)
   FullData_allcycles[[metab]][FullData_allcycles[[flag_col]] == 1] <- lod / sqrt(2)
   
-  # Calculate the standard deviation of the metabolite for complete cases
+  # Calculate the standard deviation of the metabolite for complete cases (nonmissingexposure/covariatesetc)
   metab_sd <- sd(FullData_allcycles[[metab]][FullData_allcycles$SAMPLE == 1], na.rm = TRUE)
   
   # Set outlier cutoff as 5 * SD
@@ -273,16 +286,20 @@ for (metab in names(metabolites)) {
 
 ```
 
+*Marshae Note to self: 
+The detection limits were constant for all of the analytes in the data set. Two variables are provided for each of these analytes. The variable name ending in “LC” (ex., URDBPHLC) indicates whether the result was below the limit of detection: the value “0” means that the result was at or above the limit of detection, “1” indicates that the result was below the limit of detection. For analytes with analytic results below the lower limit of detection (ex., URDBPHLC=1), an imputed fill value was placed in the analyte results field. This value is the lower limit of detection divided by square root of 2 (LLOD/sqrt[2]). The other variable prefixed URX (ex., URXBPH) provides the analytic result for that analyte.---2015/2016 documentation NHANES
+
+
+
 
 ###Replace missingness
 
 ```{r}
+
 #replace missingness (REPLACE WITH PHENOLS )
 FullData_allcycles$SAMPLE2<-ifelse(
   is.na(FullData_allcycles$BPH)|
-  is.na(FullData_allcycles$BPS)|
   is.na(FullData_allcycles$BP3)|
-  is.na(FullData_allcycles$BPF)|
   is.na(FullData_allcycles$TRS)|
   is.na(FullData_allcycles$BUP)|
   is.na(FullData_allcycles$EPB)|
@@ -291,21 +308,69 @@ FullData_allcycles$SAMPLE2<-ifelse(
   0, FullData_allcycles$SAMPLE2
 )
 
+table(FullData_allcycles$SAMPLE2, useNA = "ifany") #9,624 participants, 3528 were removed, none missing
+
+
 ```
+Marshae note to Ayishat: #9,758 participants, 3449 were removed
 
 ###LOG Transformations
+
+```{r}
+# 1. Remove existing BPH_LOG column if it exists
+FullData_allcycles$BPH_LOG <- NULL
+
+# 2. Calculate means and SD for thresholding
+mu <- mean(FullData_allcycles$BPH, na.rm = TRUE)
+sigma <- sd(FullData_allcycles$BPH, na.rm = TRUE)
+
+# 3. Subset data for 5 SD and 3 SD
+bph_5sd <- FullData_allcycles[ FullData_allcycles$BPH < (mu + 5*sigma), ]
+bph_3sd <- FullData_allcycles[ FullData_allcycles$BPH < (mu + 3*sigma), ]
+
+# 4. Log transform in each subset
+bph_5sd$BPH_LOG <- log(bph_5sd$BPH)
+bph_3sd$BPH_LOG <- log(bph_3sd$BPH)
+
+# 5. Plot histograms side by side for direct comparison
+par(mfrow = c(1,2))
+hist(bph_5sd$BPH_LOG, breaks = 100,
+     main = "Histogram log(BPH), <5 SD",
+     xlab = "log(BPH) (5 SD cut)")
+hist(bph_3sd$BPH_LOG, breaks = 100,
+     main = "Histogram log(BPH), <3 SD",
+     xlab = "log(BPH) (3 SD cut)")
+par(mfrow = c(1,1))
+```
+
+
+```{r}
+hist(log(FullData_allcycles$TRS[FullData_allcycles$SAMPLE2 == 1]), breaks=100)
+```
+
 ```{r}
 #create log transformations now so they are in survey + subesets 
 
 #learning visual look at histogram of normal scale values: 
 
-#BPH
-hist(FullData_allcycles$BPH)
+table(FullData_allcycles$BPH == 0)  #none        # How many zeros?
+table(FullData_allcycles$BPH < 0)    #none       # Any negatives?
+summary(FullData_allcycles$BPH)             # Full summary
 
+mu <- mean(FullData_allcycles$BPH_LOG, na.rm=TRUE)
+sigma <- sd(FullData_allcycles$BPH_LOG, na.rm=TRUE)
+# Keep only those within 3 SD:
+FullData_allcycles_no_outliers <- subset(
+  FullData_allcycles,
+  BPH_LOG < (mu + 3*sigma) & BPH_LOG > (mu - 3*sigma)
+)
+
+#BPH
+hist(FullData_allcycles$BPH, breaks=100)
 #now log transform and look at the new histogram. You should see difference. 
 FullData_allcycles$BPH_LOG<-log(FullData_allcycles$BPH)
 
-hist(FullData_allcycles$BPH_LOG)
+hist(FullData_allcycles$BPH_LOG,breaks=100)
 
 #BP3
 hist(FullData_allcycles$BP3)
