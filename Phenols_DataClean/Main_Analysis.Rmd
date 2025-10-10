@@ -83,13 +83,13 @@ FullData_allcyclesFINAL$AGEGROUP <- factor(FullData_allcyclesFINAL$AGEGROUP, lev
 
 FullData_allcyclesFINAL$RACEETH <- factor(FullData_allcyclesFINAL$RACEETH, levels = c(1,2,3,4,5), labels = c("NH White", "NH Black", "Mexican-American", "Other Hispanic", "Other"))
 
-FullData_allcyclesFINAL$EDUCAT <- factor(FullData_allcyclesFINAL$EDUCAT, levels=c(1,2,3,4), labels=) #ayishat replace (labels)
+FullData_allcyclesFINAL$EDUCAT <- factor(FullData_allcyclesFINAL$EDUCAT, levels=c(1,2,3,4,5), labels= c("Less than 9th grade","9th-11th grade", "High school graduate GED or equivalent","Some college or AA degree", "College or above")) 
 
-FullData_allcyclesFINAL$PIRCAT <- factor(FullData_allcyclesFINAL$PIRCAT)#ayishat replace
+FullData_allcyclesFINAL$PIRCAT <- factor(FullData_allcyclesFINAL$PIRCAT, levels=c(1,2,3,4,5), labels= c("Low Poverty","Near Poverty", "Middle Income","Upper-Middle Income", "High Income")) 
 
-FullData_allcyclesFINAL$FOODSEC <- factor(FullData_allcyclesFINAL$FOODSEC, levels = c(1, 2, 3, 4)) #replace labels, 
+FullData_allcyclesFINAL$FOODSEC <- factor(FullData_allcyclesFINAL$FOODSEC, levels = c(1, 2, 3, 4), labels= c("Fully Food Secure", "Marginally Food Secure", "Low Food Security", "Very low food security"))
 
-FullData_allcyclesFINAL$cycleyr <- factor(FullData_allcyclesFINAL$cycleyr, levels = ) #levels, lables (cycle year interval)
+FullData_allcyclesFINAL$cycleyr <- factor(FullData_allcyclesFINAL$cycleyr, levels = c(1,2,3,4,5,6,7), labels = c("2003-2004","2005-2006","2007-2008","2009-2010","2011-2012","2013-2014", "2015-2016")) 
 
 levels(FullData_allcyclesFINAL$cycleyr)
 
