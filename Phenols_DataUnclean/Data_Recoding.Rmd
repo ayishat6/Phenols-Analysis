@@ -237,14 +237,84 @@ Remove those who are outliers (5 standard deviations above the mean)
 Decision: Too restrictive in list previous list. 
 Will start from 2005-2005 and only include: 
   BPA, BP3, Triclosan, Butyl, Ethyl, Methyl, Propyl Parabens
+  
+  
 ```{r}
 FullData_allcycles<-readRDS("FullData_allcycles.rds")
+```
 
+```{r}
+library(dplyr)
+library(tidyr)
+
+lod_lookup <- data.frame(
+  cycleyr = c("2003-2004", "2005-2006", "2007-2008", "2009-2010", "2011-2012", 
+            "2013-2014", "2015-2016"),
+  
+  BPH = c(0.4, 0.4, 0.4, 0.4, 0.4, 0.2, 0.2),   # replace 0.3 with real LODs for later cycles
+  BP3 = c(0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4),  
+  TRS = c(2.3, 2.3, 2.3, 2.3, 2.3, 1.7, 1.7),
+  BUP = c(0.2, 0.2, 0.2, 0.2, 0.2, 0.1, 0.1),
+  EPB = c(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0),
+  MPB = c(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0),
+  PPB = c(0.2, 0.2, 0.2, 0.2, 0.2, 0.1, 0.1)
+)
+
+lod_long <- lod_lookup %>%
+  pivot_longer(-cycleyr, names_to = "metab", values_to = "lod")
+```
+
+
+```{r}
+metabolites <- list(
+  BPH = list(raw_col = "URXBPH", flag_col = "URDBPHLC"),
+  BP3 = list(raw_col = "URXBP3", flag_col = "URDBP3LC"),
+  TRS = list(raw_col = "URXTRS", flag_col = "URDTRSLC"),
+  BUP = list(raw_col = "URXBUP", flag_col = "URDBUPLC"),
+  EPB = list(raw_col = "URXEPB", flag_col = "URDEPBLC"),
+  MPB = list(raw_col = "URXMPB", flag_col = "URDMPBLC"),
+  PPB = list(raw_col = "URXPPB", flag_col = "URDPPBLC")
+)
+```
+
+```{r}
+# Example: Suppose you join on 'cycleyr'
+FullData_allcycles$cycleyr <- as.character(FullData_allcycles$cycleyr)
+lod_long$cycleyr <- as.character(lod_long$cycleyr)
+
+for (metab in names(metabolites)) {
+  raw_col <- metabolites[[metab]]$raw_col
+  flag_col <- metabolites[[metab]]$flag_col
+
+  FullData_allcycles[[metab]] <- FullData_allcycles[[raw_col]]
+
+  lod_vector <- dplyr::left_join(
+    data.frame(cycleyr = FullData_allcycles$cycleyr),
+    lod_long[lod_long$metab == metab, c("cycleyr", "lod")],
+    by = "cycleyr"
+  )$lod
+
+  mask <- !is.na(FullData_allcycles[[flag_col]]) & FullData_allcycles[[flag_col]] == 1
+  FullData_allcycles[[metab]][mask] <- lod_vector[mask] / sqrt(2)
+
+  metab_sd <- sd(FullData_allcycles[[metab]][FullData_allcycles$SAMPLE == 1], na.rm = TRUE)
+  cutoff <- 5 * metab_sd
+  FullData_allcycles$SAMPLE2[FullData_allcycles[[metab]] > cutoff] <- 0
+
+  cat("\n---", metab, "---\n")
+  cat("Standard Deviation:", round(metab_sd, 3), "\n")
+  cat("5x Standard Deviation Cutoff:", round(cutoff, 3), "\n")
+  cat("Number of Outliers (SAMPLE2 = 0):", sum(FullData_allcycles$SAMPLE2 == 0, na.rm = TRUE), "\n")
+  cat("Post-Outlier Standard Deviation:", 
+      round(sd(FullData_allcycles[[metab]][FullData_allcycles$SAMPLE2 == 1], na.rm = TRUE), 3), "\n")
+}
+```
+
+
+```{r}
 # Define metabolites, their raw columns, flag columns, and their respective LOD values
 metabolites <- list(
   BPH = list(raw_col = "URXBPH", flag_col = "URDBPHLC", lod = 0.2), 
-  #BPF = list(raw_col = "URXBPF", flag_col = "URDBPFLC", lod = 0.2),
-  #BPS = list(raw_col = "URXBPS", flag_col = "URDBPSLC", lod = 0.1),
   BP3 = list(raw_col = "URXBP3", flag_col = "URDBP3LC", lod = 0.4),
   TRS = list(raw_col = "URXTRS", flag_col = "URDTRSLC", lod = 1.7),
   BUP = list(raw_col = "URXBUP", flag_col = "URDBUPLC", lod = 0.1),
@@ -286,7 +356,7 @@ for (metab in names(metabolites)) {
 
 ```
 
-*Marshae Note to self: 
+*Marshae Note to self: RESOLVED
 The detection limits were constant for all of the analytes in the data set. Two variables are provided for each of these analytes. The variable name ending in “LC” (ex., URDBPHLC) indicates whether the result was below the limit of detection: the value “0” means that the result was at or above the limit of detection, “1” indicates that the result was below the limit of detection. For analytes with analytic results below the lower limit of detection (ex., URDBPHLC=1), an imputed fill value was placed in the analyte results field. This value is the lower limit of detection divided by square root of 2 (LLOD/sqrt[2]). The other variable prefixed URX (ex., URXBPH) provides the analytic result for that analyte.---2015/2016 documentation NHANES
 
 

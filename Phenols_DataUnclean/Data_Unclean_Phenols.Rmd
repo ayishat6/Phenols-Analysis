@@ -20,76 +20,7 @@ library(readr)
 ```
 
 #Clean Cycle Years
-```{r}
-#2003-2004
-#Fastingstatus
-FAST03_04<-read_xpt("2003_2004_PH_C.xpt") 
 
-FAST03_04C<-FAST03_04%>%
-  select(SEQN, PHAFSTHR)%>% #choose columns participant ID and Total length of food fast hours
-  arrange(SEQN)  
-
-write_csv(FAST03_04C,"FAST03_04C.csv")
-
-
-#Demographics
-demo03_04<-read_xpt("2003_2004_DEMO_C.xpt")
-demo03_04C<- demo03_04 %>% 
-  select(SEQN,RIAGENDR,RIDAGEYR,RIDRETH1,DMDEDUC2, DMDEDUC3,INDFMPIR, SDMVPSU,SDMVSTRA,SDDSRVYR ) %>%
-  arrange(SEQN)
-
-#save the file as csv in cleaned data folder 
-write_csv(demo03_04C,"demo03_04C.csv")
-
-#Exposure (FI)
-FSQ03_04<-read_xpt("2003_2004_FSQ_C.xpt")
-
-FSQ03_04C<-FSQ03_04%>%
-  select(SEQN,FSDHH)%>%
-  arrange(SEQN)
-
-
-write_csv(FSQ03_04C,"FSQ03_04C.csv")
-
-#Outcome (PHE)
-
-PHE03_04<-read_xpt("2003_2004_L24EPH_C.xpt")
-
-PHE03_04C <- PHE03_04%>%
-  select(SEQN,colnames(PHE03_04[2:9]))%>% 
-  arrange(SEQN)
-
-write_csv(PHE03_04C,"PHE03_04C.csv")
-
-
-#creatinine
-L16_C<-read_xpt("2003_2004_L16_C.xpt")
-
-L16_CC<- L16_C %>%
-   select(SEQN,URXUCR)%>%
-  arrange(SEQN) 
-
-write_csv(L16_CC,"L16_CC.csv")
-
-# then Merge datasets
-dat1_03_04<- merge(FAST03_04C, demo03_04C, by = "SEQN") #first two, base function is innerjoin.
-dat2_03_04<- merge(dat1_03_04, FSQ03_04C, by = "SEQN") #merge the first mereged with the third dataset
-dat3_03_04<- merge(dat2_03_04, PHE03_04C, by = "SEQN") #third merge
-dat4_03_04<- merge(dat3_03_04, L16_CC, by = "SEQN")#final merge
-
-# create cycleyr
-dat4_03_04<-dat4_03_04%>%
-  mutate(cycleyr=1)
-
-print(dat4_03_04)
-#2612 observations and 19 columns
-
-# Save the modified dataset to a new CSV file
-FullData_2003_2004<-dat4_03_04
-
-#write csv file 
-write.csv(dat4_03_04, "FullData_2003_2004.csv") #save csv file
-```
 
 
 
@@ -152,7 +83,7 @@ dat4_05_06<- merge(dat3_05_06, ALB_CR_DC, by = "SEQN")
 
 # create cycleyr
 dat4_05_06<-dat4_05_06%>%
-  mutate(cycleyr=2)
+  mutate(cycleyr=1)
 
 print(dat4_05_06)
 #2638 observations and 17 columns
@@ -224,7 +155,7 @@ dat4_07_08<- merge(dat3_07_08, ALB_CR_EC, by = "SEQN")#final merge
 
 # create cycleyr
 dat4_07_08<-dat4_07_08%>%
-  mutate(cycleyr=3)
+  mutate(cycleyr=2)
 
 print(dat4_07_08)
 #need help with variables
@@ -301,7 +232,7 @@ dat4_09_10<- merge(dat3_09_10, ALB_CR_FC, by = "SEQN")#final merge
 
 # create cycleyr
 dat4_09_10<-dat4_09_10%>%
-  mutate(cycleyr=4)
+  mutate(cycleyr=3)
 
 print(dat4_09_10)
 #2718 observations and 50 columns:)
@@ -373,7 +304,7 @@ dat4_11_12<- merge(dat3_11_12, ALB_CR_GC, by = "SEQN")#final merge
 
 # create cycleyr
 dat4_11_12<-dat4_11_12%>%
-  mutate(cycleyr=5)
+  mutate(cycleyr=4)
 
 print(dat4_11_12)
 #2718 observations and 50 columns:)
@@ -449,7 +380,7 @@ dat4_13_14<- merge(dat3_13_14, ALB_CR_HC, by = "SEQN")#final merge
 
 # create cycleyr
 dat4_13_14<-dat4_13_14%>%
-  mutate(cycleyr=6)
+  mutate(cycleyr=5)
 
 print(dat4_13_14)
 #2777 observations and 50 columns:)
@@ -527,7 +458,7 @@ dat4_15_16<- merge(dat3_15_16, ALB_CR_IC, by = "SEQN")#final merge
 
 # create cycleyr
 dat4_15_16<-dat4_15_16%>%
-  mutate(cycleyr=7)
+  mutate(cycleyr=6)
 
 print(dat4_15_16)
 #2803 observations and 18 columns:)
@@ -546,9 +477,6 @@ write.csv(dat4_15_16, "FullData_2015_2016.csv") #save csv file
 
 
 #check missing 
-sum(is.na(FullData_2003_2004$SDMVSTRA)) #0 missing
-sum(is.na(FullData_2003_2004$SDMVPSU)) #0 missing
-sum(is.na(FullData_2003_2004$WTSC2YR)) #0 missing
 sum(is.na(FullData_2005_2006$SDMVSTRA)) #0 missing
 sum(is.na(FullData_2005_2006$SDMVPSU)) #0 missing
 sum(is.na(FullData_2005_2006$WTSB2YR)) #0 missing
@@ -571,7 +499,6 @@ sum(is.na(FullData_2015_2016$WTSB2YR)) #0 missing
 
 #merge all datasets into one: 
 FullData_allcycles<-bind_rows(
-  FullData_2003_2004,
   FullData_2005_2006,
   FullData_2007_2008,
   FullData_2009_2010,
@@ -590,8 +517,6 @@ sum(is.na(FullData_allcycles$SURVWEIGHT))
 
 write_csv(FullData_allcycles,"~/Documents/Github/Phenols-Analysis/Phenols_DataUnclean/FullData_allcycles.csv") #replace with your path name for folder
 
-
-summary(FullData_allcycles$SD)
 ```
 
 
