@@ -57,7 +57,7 @@ print(quartiles)
 FullData_allcycles$AGEGROUP<-cut(
   FullData_allcycles$RIDAGEYR,
   breaks=quartiles, 
-  include.lowest=TRUE, 
+  include.lowest=TRUE,
   labels= c("18-31", "32-46", "47-63", "64-85")
 )
 
@@ -161,8 +161,18 @@ Urinary Ethyl paraben - URXEPB
 Urinary Methyl paraben - URXMPB
 ```{r}
 names(FullData_allcycles)
-FullData_allcycles <- FullData_allcycles %>%
-  select(-c(URXUCR.x, URXUCR.y))
+
+sum(is.na(FullData_allcycles$URXUCR.y))#9685
+
+
+FullData_allcycles$URXUCR_final <- coalesce(
+  FullData_allcycles$URXUCR, 
+  FullData_allcycles$URXUCR.x, 
+  FullData_allcycles$URXUCR.y
+)
+
+summary(FullData_allcycles$URXUCR_final, useNA="ifany")
+
 ```
 
 ###Create Sample and Sample 2 (final analytic dataset)
@@ -194,6 +204,9 @@ saveRDS(FullData_allcycles, "FullData_allcycles.rds") #run this to save dataset 
 
 ```
 Note to Ayishat: Following removal we have 10,423 with exclusion of missing covariates, and exposure data
+
+
+
 
 
 ###Outliers
@@ -298,13 +311,16 @@ table(FullData_allcycles$SAMPLE2) #2139 final sample size
 
 FullData_allcycles2 <- FullData_allcycles %>%
   mutate(SAMPLE2 = ifelse(SAMPLE == 1 &
-                          URDBPHLC != 1 &
-                          URDBP3LC != 1 &
-                          URDTRSLC != 1 &
-                          URDMPBLC != 1 &
-                          URDPPBLC != 1, 1, 0))
+                          (URDBPHLC != 1 |
+                           URDBP3LC != 1 |
+                           URDTRSLC != 1 |
+                           URDBUPLC != 1 |
+                           URDEPBLC != 1 |
+                           URDMPBLC != 1 |
+                           URDPPBLC != 1), 1, 0))
 
-table(FullData_allcycles2$SAMPLE2) #6659 final sample size exclusion of ethyl, butyl parabens 
+
+table(FullData_allcycles2$SAMPLE2) #10097 final sample size 
 
 ```
 

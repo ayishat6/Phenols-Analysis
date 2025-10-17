@@ -70,36 +70,74 @@ FullData_allcyclesFINAL<-read.csv("FullData_allcyclesFINAL.csv")
 #FullData_allcyclesFINAL<-readRDS("FullData_allcyclesFINAL.rds")
 
 #change units of creatinine (mg/dl)
-FullData_allcyclesFINAL$URXUCR <- FullData_allcyclesFINAL$URXUCR * 10000
+FullData_allcyclesFINAL$URXUCR_final <- FullData_allcyclesFINAL$URXUCR_final * 10000
 
 #dropped those with missing creatinine
-FullData_allcyclesFINAL = FullData_allcyclesFINAL[!is.na(FullData_allcyclesFINAL$URXUCR), ] 
-
+FullData_allcyclesFINAL = FullData_allcyclesFINAL[!is.na(FullData_allcyclesFINAL$URXUCR_final), ] 
 
 #rename variables 
 FullData_allcyclesFINAL$SEX <- factor(FullData_allcyclesFINAL$SEX, levels = c(1, 2), labels = c("Male", "Female"))
 
-FullData_allcyclesFINAL$AGEGROUP <- factor(FullData_allcyclesFINAL$AGEGROUP, levels= c("18-31", "32-46", "47-63", "64-85"))
+
 
 FullData_allcyclesFINAL$RACEETH <- factor(FullData_allcyclesFINAL$RACEETH, levels = c(1,2,3,4,5), labels = c("NH White", "NH Black", "Mexican-American", "Other Hispanic", "Other"))
 
-FullData_allcyclesFINAL$EDUCAT <- factor(FullData_allcyclesFINAL$EDUCAT, levels=c(1,2,3,4,5), labels= c("Less than 9th grade","9th-11th grade", "High school graduate GED or equivalent","Some college or AA degree", "College or above")) 
+FullData_allcyclesFINAL$EDUCAT <- factor(FullData_allcyclesFINAL$EDUCAT, levels=c(1,2,3,4), labels= c("Less than 9th grade", "High school graduate/GED or equivalent equivalent","Some college or AA degree", "College or above")) 
 
 FullData_allcyclesFINAL$PIRCAT <- factor(FullData_allcyclesFINAL$PIRCAT, levels=c(1,2,3,4,5), labels= c("Low Poverty","Near Poverty", "Middle Income","Upper-Middle Income", "High Income")) 
 
-FullData_allcyclesFINAL$FOODSEC <- factor(FullData_allcyclesFINAL$FOODSEC, levels = c(1, 2, 3, 4), labels= c("Fully Food Secure", "Marginally Food Secure", "Low Food Security", "Very low food security"))
+FullData_allcyclesFINAL$FOODSEC <- factor(FullData_allcyclesFINAL$FOODSEC, levels = c(1, 2, 3, 4), labels= c("Fully Food Secure", "Marginally Food Secure", "Low Food Security", "Very Low Food Secure"))
 
-FullData_allcyclesFINAL$cycleyr <- factor(FullData_allcyclesFINAL$cycleyr, levels = c(1,2,3,4,5,6,7), labels = c("2003-2004","2005-2006","2007-2008","2009-2010","2011-2012","2013-2014", "2015-2016")) 
+FullData_allcyclesFINAL$cycleyr <- factor(FullData_allcyclesFINAL$cycleyr, levels = c(1,2,3,4,5,6), labels = c("2005-2006","2007-2008","2009-2010","2011-2012","2013-2014", "2015-2016")) 
 
-levels(FullData_allcyclesFINAL$cycleyr)
+FullData_allcyclesFINAL$AGEGROUP <- factor(
+  FullData_allcyclesFINAL$AGEGROUP,
+  levels = c("18-31", "32-46", "47-63", "64-85")
+)
 
-names(FullData_allcyclesFINAL)
+table(FullData_allcyclesFINAL$FOODSEC)
+
+
+FullData_allcyclesFINAL <- FullData_allcyclesFINAL %>%
+  mutate(PIR_POLICY = factor(
+    case_when(
+      PIRCAT == "Low Poverty" ~ "Below Poverty",
+      PIRCAT %in% c("Near Poverty", "Middle Income") ~ "Near/Working Class",
+      PIRCAT %in% c("Upper-Middle Income", "High Income") ~ "High Income"
+    ),
+    levels = c("Below Poverty", "Near/Working Class", "High Income")
+  ))
+
+
+```
+
+log phenols 
+```{r}
+library(dplyr)
+
+FullData_allcyclesFINAL <- FullData_allcyclesFINAL %>%
+  mutate(
+    URXBPH_LOG = log(URXBPH),
+    URXBP3_LOG = log(URXBP3),
+    URXTRS_LOG = log(URXTRS),
+    URXBUP_LOG = log(URXBUP),
+    URXEPB_LOG = log(URXEPB),
+    URXMPB_LOG = log(URXMPB),
+    URXPPB_LOG = log(URXPPB)
+  )
 ```
 
 
 # Survey Package 
 
 now we need to use the survey package to do survey analysis 
+
+
+```{r}
+FullData_allcyclesFINAL <- subset(FullData_allcyclesFINAL, SAMPLE2 == 1)
+
+
+```
 
 
 ```{r}
@@ -110,22 +148,20 @@ survey <-svydesign(ids = ~SDMVPSU,
          data = FullData_allcyclesFINAL)
 
 
-surveysubset<-subset(survey,SAMPLE2==1)
-summary(surveysubset)
 ```
 
 
 
 ```{r, echo=FALSE}
 
-#class(surveysubset)
-surveysubset %>% 
+#class(survey)
+survey %>% 
   tbl_svysummary(
     # Use a character variable here. A factor leads to an error
     by = FOODSEC,
     # Use include to select variables
     include = c(SEX, AGEGROUP, RACEETH, EDUCAT,
-                PIRCAT, cycleyr),
+                PIR_POLICY, cycleyr),
     statistic = list(all_continuous()  ~ "{mean} ({sd})",
                      all_categorical() ~ "{n}    ({p}%)"),
     digits = list( all_categorical() ~ c(0, 1))
@@ -138,14 +174,14 @@ surveysubset %>%
 
 
 
-surveysubset_unweighted<-as.data.frame(surveysubset)
+survey_unweighted<-as.data.frame(survey)
 tbl_summary(
-  surveysubset_unweighted,
+  survey_unweighted,
     # Use a character variable here. A factor leads to an error
     by = FOODSEC,
     # Use include to select variables
     include = c(SEX, AGEGROUP, RACEETH, EDUCAT,
-                PIRCAT, cycleyr),
+                PIR_POLICY, cycleyr),
     statistic = list(all_continuous()  ~ "{mean} ({sd})",
                      all_categorical() ~ "{n}    ({p}%)"),
     digits = list( all_categorical() ~ c(0, 1))
@@ -157,3 +193,301 @@ tbl_summary(
   bold_labels()%>%
   add_overall()
 ```
+
+
+# GEOMETRIC MEANS
+
+Log transformed values instead for geometric mean reporting.
+
+Realized that NHANES may have updated check log for details 
+
+```{r}
+
+log_means_set2<- svymean(~URXBPH_LOG+URXBP3_LOG+URXTRS_LOG+URXBUP_LOG+URXEPB_LOG+URXMPB_LOG+URXPPB_LOG, design=survey, na.rm = TRUE)
+print(log_means_set2) 
+
+#exponetiate
+
+
+log_means<- coef(log_means_set2) # log-scale means
+geomeans<-exp(log_means)
+log_se <- SE(log_means_set2)  # standard errors on log scale
+
+
+geomean_table <- data.frame(
+  variable = names(log_means),
+  geomean = geomeans
+)
+
+
+print(geomean_table)
+
+
+```
+
+
+#TABLE TWO
+```{r, echo=FALSE}
+# Step 1 – Run svyquantile for each phenol and save
+
+
+svyquantile(~URXBPH_LOG,  design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
+svyquantile(~URXBP3_LOG, design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
+svyquantile(~URXTRS_LOG,  design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
+svyquantile(~URXBUP_LOG,  design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
+svyquantile(~URXEPB_LOG,  design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
+
+svyquantile(~URXMPB_LOG,  design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
+svyquantile(~URXPPB_LOG,  design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
+
+
+
+```
+
+
+
+# MAIN ANALYSIS
+
+## Unadjusted analysis
+
+```{r, echo=FALSE}
+#URXBPH_LOG
+
+mod1_unadj<-svyglm(URXBPH_LOG~(FOODSEC) + URXUCR_final, design=survey)
+
+#URXBP3_LOG
+mod2_unadj<-svyglm(URXBP3_LOG~(FOODSEC) + URXUCR_final , design=survey)
+
+#URXTRS_LOG
+mod3_unadj<-svyglm(URXTRS_LOG~(FOODSEC) + URXUCR_final , design=survey)
+
+#URXBUP_LOG
+mod4_unadj<-svyglm(URXBUP_LOG~(FOODSEC) + URXUCR_final,  design=survey)
+
+#URXEPB_LOG
+
+mod5_unadj<-svyglm(URXEPB_LOG~(FOODSEC) + URXUCR_final, design=survey)
+
+#URXMPB_LOG
+mod6_unadj<-svyglm(URXMPB_LOG~(FOODSEC) + URXUCR_final, design=survey)
+
+#URXPPB_LOG
+mod7_unadj<-svyglm(URXPPB_LOG~(FOODSEC) + URXUCR_final, design=survey)
+
+
+
+# Apply the exp function to each model and print the results
+models_unadj<- list(mod1_unadj, mod2_unadj, mod3_unadj, mod4_unadj, mod5_unadj, 
+               mod6_unadj, mod7_unadj )
+
+names(models_unadj) <- c("URXBPH_LOG", "URXBP3_LOG", "URXTRS_LOG", "URXBUP_LOG", "URXEPB_LOG",
+                    "URXMPB_LOG", "URXPPB_LOG")
+
+exp_unadj<- lapply(models_unadj, exp_coeffs)
+
+# Combine all dataframes into one
+unadj_combined_df <- bind_rows(exp_unadj)
+
+#write csv 
+
+write.csv(unadj_combined_df, "Results/Unadjusted_Models2.csv")
+```
+
+## Adjusted (age, sex, education, survey year, race, FIP)
+
+```{r, echo=FALSE}
+#URXBPH_LOG
+mod1c_adj<- svyglm(URXBPH_LOG ~ (FOODSEC) + URXUCR_final + (SEX) + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIR_POLICY) + (cycleyr),design = survey)
+
+
+
+#URXBP3_LOG
+
+mod2c_adj<- svyglm(URXBP3_LOG ~ (FOODSEC) + URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIR_POLICY) + (cycleyr), design = survey)
+
+
+
+#URXTRS_LOG
+
+mod3c_adj<- svyglm(URXTRS_LOG ~ (FOODSEC) + URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIR_POLICY) + (cycleyr), design = survey)
+
+
+
+#MCPP
+mod4c_adj<- svyglm(URXBUP_LOG ~ (FOODSEC) + URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIR_POLICY) + (cycleyr), design = survey)
+
+
+
+#URXEPB_LOG
+
+mod5c_adj<- svyglm(URXEPB_LOG ~ (FOODSEC) + URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIR_POLICY) + (cycleyr), design = survey)
+
+
+
+#URXMPB_LOG
+mod6c_adj<- svyglm(URXMPB_LOG ~ (FOODSEC) + URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (cycleyr), design = survey)
+
+
+
+#URXPPB_LOG
+mod7c_adj<- svyglm(URXPPB_LOG ~ (FOODSEC) + URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIR_POLICY) + (cycleyr), design = survey)
+
+
+
+# Apply the exp function to each model and print the results
+models_adj <- list(mod1c_adj, mod2c_adj, mod3c_adj, mod4c_adj, mod5c_adj, mod6c_adj, mod7c_adj)
+
+names(models_adj) <- c("URXBPH_LOG", "URXBP3_LOG", "URXTRS_LOG", "URXBUP_LOG", "URXEPB_LOG", "URXMPB_LOG", "URXPPB_LOG" )
+
+exp_adj<- lapply(models_adj, exp_coeffs)
+
+# Combine all dataframes into one
+adj_combined_dfs<- bind_rows(exp_adj)
+
+#write csv 
+write.csv(adj_combined_dfs, "Results/Adjusted_Models.csv")
+```
+
+#PLOTS
+###Model 3 adjusted signifcant findings
+```{r}
+
+RM_GGPlots <-read.csv("Results/RM_GGPlots.csv")
+names(RM_GGPlots) <- c("Model", "FOODSEC", "Food Security", "% Difference", "% Lower", "% Higher", "SE", "P_value")
+brewer_pal <- brewer.pal(3, "Set1")
+range(RM_GGPlots$`% Lower`, na.rm=TRUE)
+range(RM_GGPlots$`% Higher`, na.rm=TRUE)
+
+
+
+# Helper theme chunk to reuse in each plot
+custom_theme <-
+  theme(
+    plot.title = element_text(hjust = 0.5, face="bold", size=18),
+    panel.grid.major.y = element_line(color = "grey90"),          
+    panel.grid.minor = element_blank(),                          
+    axis.line = element_line(color = "black"),     
+    plot.margin = margin(t = 10, r = 10, b = 25, l = 10)  # 
+  )
+
+# BPA
+BPA_adj3 <- RM_GGPlots %>%
+  filter(Model == "BPA", !is.na(`% Difference`), !is.na(`% Lower`), !is.na(`% Higher`)) %>%
+  ggplot(aes(x = factor(`Food Security`, levels = c("High (Ref)", "Marginal", "Low", "Very Low")), y = `% Difference`)) +
+  geom_point(size = 3, color = brewer_pal[1], alpha = 0.7) +
+  geom_errorbar(aes(ymin = `% Lower`, ymax = `% Higher`), width = 0.3, color = brewer_pal[1]) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +  
+   labs(
+    title = "BPA",
+    x = "Food Security Levels",
+    y = "% Difference in Concentrations") +
+  labs(title = "BPA", x = "Food Security Levels", y = "% Difference in Concentrations") +
+  custom_theme +
+  scale_x_discrete(drop = FALSE)  + 
+  scale_y_continuous(limits = c(-65, 68))
+
+
+# BP3
+BP3_adj3 <- RM_GGPlots %>%
+  filter(Model == "BP3", !is.na(`% Difference`), !is.na(`% Lower`), !is.na(`% Higher`)) %>%
+      ggplot(aes(x = factor(`Food Security`, levels = c("High (Ref)", "Marginal", "Low", "Very Low")), y = `% Difference`)) +
+  geom_point(size = 3, color = brewer_pal[1], alpha = 0.7) +
+  geom_errorbar(aes(ymin = `% Lower`, ymax = `% Higher`), width = 0.2, color = brewer_pal[1]) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +  
+  labs(title = "BP3", x = "Food Security Levels", y = "% Difference in Concentrations") +
+  custom_theme +
+  scale_x_discrete(drop = FALSE)+   scale_y_continuous(limits = c(-65, 68))
+
+
+# TRS
+TRS_adj3 <- ggplot(RM_GGPlots %>% filter(Model == "TRS", !is.na(`% Difference`), !is.na(`% Lower`), !is.na(`% Higher`)),
+  aes(x = factor(`Food Security`, levels = c("High (Ref)", "Marginal", "Low", "Very Low")), y = `% Difference`)
+) +
+  geom_point(size = 3, color = brewer_pal[1], alpha = 0.7) +
+  geom_errorbar(aes(ymin = `% Lower`, ymax = `% Higher`), width = 0.2, color = brewer_pal[1]) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +  
+  labs(title = "TRS", x = "Food Security Levels", y = "% Difference in Concentrations") +
+  custom_theme +
+  scale_x_discrete(drop = FALSE)+   
+  scale_y_continuous(limits = c(-65, 68))
+
+
+# BUP
+BUP_adj3 <- RM_GGPlots %>%
+  filter(Model == "BUP", !is.na(`% Difference`), !is.na(`% Lower`), !is.na(`% Higher`)) %>%
+  ggplot(aes(x = factor(`Food Security`, levels = c("High (Ref)", "Marginal", "Low", "Very Low")), y = `% Difference`)) +
+  geom_point(size = 3, color = brewer_pal[1], alpha = 0.7) +
+  geom_errorbar(aes(ymin = `% Lower`, ymax = `% Higher`), width = 0.2, color = brewer_pal[1]) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +  
+  labs(title = "BUP", x = "Food Security Levels", y = "% Difference in Concentrations") +
+  custom_theme +
+  scale_x_discrete(drop = FALSE)+ 
+  scale_y_continuous(limits = c(-65, 68))
+
+
+# EPB
+EPB_adj3 <- ggplot(RM_GGPlots %>% filter(Model == "EPB", !is.na(`% Difference`), !is.na(`% Lower`), !is.na(`% Higher`)),
+  aes(x = factor(`Food Security`, levels = c("High (Ref)", "Marginal", "Low", "Very Low")), y = `% Difference`)
+) +
+  geom_point(size = 3, color = brewer_pal[1], alpha = 0.7) +
+  geom_errorbar(aes(ymin = `% Lower`, ymax = `% Higher`), width = 0.2, color = brewer_pal[1]) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +  
+  labs(title = "ΣEPB", x = "Food Security Levels", y = "% Difference in Concentrations") +
+  custom_theme +
+  scale_x_discrete(drop = FALSE)+ 
+    scale_y_continuous(limits = c(-65, 68))
+
+
+# MPB
+MPB_adj3 <- ggplot(RM_GGPlots %>% filter(Model == "MPB", !is.na(`% Difference`), !is.na(`% Lower`), !is.na(`% Higher`)),
+  aes(x = factor(`Food Security`, levels = c("High (Ref)", "Marginal", "Low", "Very Low")), y = `% Difference`)
+) +
+  geom_point(size = 3, color = brewer_pal[1], alpha = 0.7) +
+  geom_errorbar(aes(ymin = `% Lower`, ymax = `% Higher`), width = 0.2, color = brewer_pal[1]) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +  
+  labs(title = "ΣMPB", x = "Food Security Levels", y = "% Difference in Concentrations") +
+  custom_theme +
+  scale_x_discrete(drop = FALSE)+ 
+    scale_y_continuous(limits = c(-65, 68))
+
+
+#PPB
+PPB_adj3 <- RM_GGPlots %>%
+  filter(Model == "PPB", !is.na(`% Difference`), !is.na(`% Lower`), !is.na(`% Higher`)) %>%
+ ggplot(aes(x = factor(`Food Security`, levels = c("High (Ref)", "Marginal", "Low", "Very Low")), y = `% Difference`)) +
+  geom_point(size = 3, color = brewer_pal[1], alpha = 0.7) +
+  geom_errorbar(aes(ymin = `% Lower`, ymax = `% Higher`), width = 0.2, color = brewer_pal[1]) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +  
+  labs(title = "ΣPPB", x = "Food Security Levels", y = "% Difference in Concentrations") +
+  custom_theme +
+  scale_x_discrete(drop = FALSE)+ 
+    scale_y_continuous(limits = c(-65, 68))
+
+```
+
+
+```{r}
+
+figure1<- ggarrange(
+  BPA_adj3 + theme(legend.position="none"), 
+  BP3_adj3 + theme(legend.position="none"), 
+  TRS_adj3 + theme(legend.position="none"),
+  BUP_adj3 + theme(legend.position="none"), 
+  EPB_adj3 + theme(legend.position="none"), 
+  MPB_adj3 + theme(legend.position="none"), 
+  PPB_adj3 , # Leave legend ON only here
+  ncol = 4, nrow = 2,
+  labels = c("A", "B", "C", "D", "E", "G"),
+  common.legend = TRUE, # Should propagate the legend from one plot
+  legend = "bottom"
+)
+
+figure1
+
+```
+
+
+
+
+
+
