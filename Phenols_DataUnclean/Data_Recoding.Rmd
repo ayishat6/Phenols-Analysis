@@ -22,12 +22,12 @@ library(ggplot2) #creating data visualizations/plots
 ```{r}
 FullData_allcycles<-read.csv("~/Documents/Github/Phenols-Analysis/Phenols_DataUnclean/FullData_allcycles.csv")
 ```
-
+Note to Ayishat: Initial Population: 16,349
 ##Food Security
 ```{r}
 #fsdhh
 table(FullData_allcycles$FSDHH, useNA="ifany")
-#305 missing
+#198 missing
 
 #Variables
 FullData_allcycles<-FullData_allcycles%>%
@@ -39,12 +39,12 @@ FullData_allcycles<-FullData_allcycles%>%
     TRUE~NA_real_
   ))
 
-table(FullData_allcycles$FOODSEC,useNA="ifany")
+table(FullData_allcycles$FOODSEC,useNA="ifany") #198 missing
 ```
-Marshae Note to Ayishat: 18,961 adult and child population 
+Note to Ayishat: 198 missing food security 
 ##Age
 ```{r}
-summary(FullData_allcycles$RIDAGEYR, useNA="ifany")
+summary(FullData_allcycles$RIDAGEYR, useNA="ifany") #no missing
 
 class(FullData_allcycles$RIDAGEYR) #to see what type of variable you have 
 
@@ -66,7 +66,7 @@ table(FullData_allcycles$AGEGROUP, useNA="ifany")
 ```
 decided to keep male as reference - september 19th, 2025
 
-Marshae Note to Ayishat: Following removal of children, sample size is now 13,207
+Note to Ayishat: Following removal of children, sample size is now 11,479 observations
 
 ##Sex
 ```{r}
@@ -77,7 +77,7 @@ FullData_allcycles<-FullData_allcycles%>%
 
 levels(FullData_allcycles$SEX)<-(c("1", "2"))
 
-table(FullData_allcycles$SEX, useNA="ifany")
+table(FullData_allcycles$SEX, useNA="ifany") #no NA
 ```
 
 
@@ -97,7 +97,7 @@ FullData_allcycles<-FullData_allcycles%>%
   ))
 
 
-table(FullData_allcycles$RACEETH, useNA="ifany")
+table(FullData_allcycles$RACEETH, useNA="ifany") #no NA
 ```
 
 
@@ -118,14 +118,13 @@ FullData_allcycles <- FullData_allcycles %>%
     TRUE ~ NA_real_
   ))
 
-table(FullData_allcycles$EDUCAT, useNA="ifany")
+table(FullData_allcycles$EDUCAT, useNA="ifany") #23 NA
 ```
-
 
 ##Poverty
 ```{r}
 #poverty
-summary(FullData_allcycles$INDFMPIR, useNA="ifany") #1513missing
+summary(FullData_allcycles$INDFMPIR, useNA="ifany") #1030 missing
 
 FullData_allcycles<-FullData_allcycles%>%
   mutate(PIRCAT=case_when(
@@ -137,9 +136,9 @@ FullData_allcycles<-FullData_allcycles%>%
     is.na(INDFMPIR)~NA_real_
   ))
 
-table(FullData_allcycles$PIRCAT, useNA="ifany")
+table(FullData_allcycles$PIRCAT, useNA="ifany") #1030 
 ```
-
+1030 missing PIR
 
 ##CycleYr
 Check levels of cycle year, make sure they match up with your analysis time span, and check missingness
@@ -164,25 +163,6 @@ Urinary Methyl paraben - URXMPB
 names(FullData_allcycles)
 FullData_allcycles <- FullData_allcycles %>%
   select(-c(URXUCR.x, URXUCR.y))
-
-#BPH
-summary(FullData_allcycles$URXBPH, na.rm = FALSE) #450 missing
-##BPF
-#summary(FullData_allcycles$URXBPF, na.rm = FALSE) #9506 missing
-##BPS
-#summary(FullData_allcycles$URXBPS, na.rm = FALSE)  #9506 missing
-#BP3
-summary(FullData_allcycles$URXBP3, na.rm = FALSE) #450 missing
-#TRS
-summary(FullData_allcycles$URXTRS, na.rm = FALSE) #2115 missing
-#BUP
-summary(FullData_allcycles$URXBUP, na.rm = FALSE) #2115 missing
-#EPB
-summary(FullData_allcycles$URXEPB, na.rm = FALSE) #2115 missing
-#MPB
-summary(FullData_allcycles$URXMPB, na.rm = FALSE) #2115 missing
-#PPB
-summary(FullData_allcycles$URXPPB, na.rm = FALSE) #2115 missing
 ```
 
 ###Create Sample and Sample 2 (final analytic dataset)
@@ -192,11 +172,16 @@ Marshae Note to Ayishat: Before we generate sample: prior to any missingness rem
 
 #generate sample (samplepopulation) from nonmissing in exposure/covariates
 FullData_allcycles<-FullData_allcycles %>%
-  mutate(SAMPLE= ifelse(is.na(EDUCAT)| is.na(PIRCAT) | is.na(SEX)| is.na(RACEETH) | is.na(AGEGROUP)| is.na(FOODSEC) | cycleyr==1,0,1))
+  mutate(SAMPLE= ifelse(is.na(EDUCAT)| is.na(PIRCAT) | is.na(SEX)| is.na(RACEETH) | is.na(AGEGROUP)| is.na(FOODSEC) | is.na(cycleyr),0,1))
 
-#if any of these are missing give it a zero OR from cycleyr 1, if not give it a 1. 
+sum(is.na(FullData_allcycles$EDUCAT) | 
+    is.na(FullData_allcycles$PIRCAT) | 
+    is.na(FullData_allcycles$SEX) | 
+    is.na(FullData_allcycles$RACEETH) | 
+    is.na(FullData_allcycles$AGEGROUP) | 
+    is.na(FullData_allcycles$FOODSEC) | 
+    is.na(FullData_allcycles$cycleyr)) #1056 missing 
 
-summary(FullData_allcycles$SAMPLE)
 table(FullData_allcycles$SAMPLE, useNA="ifany") #10,423
 
 #second sampling variable (missing in outcome, creatinine)
@@ -208,7 +193,7 @@ saveRDS(FullData_allcycles, "FullData_allcycles.rds") #run this to save dataset 
 
 
 ```
-Following removal we have 10,423 with exclusion of missing covariates, and exposure data
+Note to Ayishat: Following removal we have 10,423 with exclusion of missing covariates, and exposure data
 
 
 ###Outliers
@@ -243,118 +228,151 @@ Will start from 2005-2005 and only include:
 FullData_allcycles<-readRDS("FullData_allcycles.rds")
 ```
 
+
+###Summary
+
 ```{r}
-library(dplyr)
-library(tidyr)
+table(FullData_allcycles$URDBPHLC)#870 below LOD
+table(FullData_allcycles$URDBP3LC)#430 below LOD
+table(FullData_allcycles$URDTRSLC)#2816 below LOD
+table(FullData_allcycles$URDBUPLC)#7032 below LOD
+table(FullData_allcycles$URDEPBLC)#5590 below LOD
+table(FullData_allcycles$URDMPBLC)#88 below LOD
+table(FullData_allcycles$URDPPBLC)#536 below LOD
 
-lod_lookup <- data.frame(
-  cycleyr = c("2003-2004", "2005-2006", "2007-2008", "2009-2010", "2011-2012", 
-            "2013-2014", "2015-2016"),
-  
-  BPH = c(0.4, 0.4, 0.4, 0.4, 0.4, 0.2, 0.2),   # replace 0.3 with real LODs for later cycles
-  BP3 = c(0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4),  
-  TRS = c(2.3, 2.3, 2.3, 2.3, 2.3, 1.7, 1.7),
-  BUP = c(0.2, 0.2, 0.2, 0.2, 0.2, 0.1, 0.1),
-  EPB = c(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0),
-  MPB = c(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0),
-  PPB = c(0.2, 0.2, 0.2, 0.2, 0.2, 0.1, 0.1)
-)
+```
 
-lod_long <- lod_lookup %>%
-  pivot_longer(-cycleyr, names_to = "metab", values_to = "lod")
+Note to Ayishat: quite a bit of values below LOD, namely ethyl and butyl paraben and TRS
+confirmation that values below LLOD have already been replaced by NHANES
+
+```{r}
+BPH<- FullData_allcycles[FullData_allcycles$URDBPHLC == 1, ]
+BP3<- FullData_allcycles[FullData_allcycles$URDBP3LC == 1, ]
+TRS<- FullData_allcycles[FullData_allcycles$URDTRSLC == 1, ]
+BUP<- FullData_allcycles[FullData_allcycles$URDBUPLC == 1, ]
+EPB<- FullData_allcycles[FullData_allcycles$URDEPBLC == 1, ]
+MPB<- FullData_allcycles[FullData_allcycles$URDMPBLC == 1, ]
+PPB<- FullData_allcycles[FullData_allcycles$URDPPBLC == 1, ]
+
+summary(BPH$URXBPH)
+summary(BP3$URXBP3)
+summary(TRS$URXTRS)
+summary(BUP$URXBUP)
+summary(EPB$URXEPB)
+summary(MPB$URXMPB)
+summary(PPB$URXPPB)
 ```
 
 
 ```{r}
-metabolites <- list(
-  BPH = list(raw_col = "URXBPH", flag_col = "URDBPHLC"),
-  BP3 = list(raw_col = "URXBP3", flag_col = "URDBP3LC"),
-  TRS = list(raw_col = "URXTRS", flag_col = "URDTRSLC"),
-  BUP = list(raw_col = "URXBUP", flag_col = "URDBUPLC"),
-  EPB = list(raw_col = "URXEPB", flag_col = "URDEPBLC"),
-  MPB = list(raw_col = "URXMPB", flag_col = "URDMPBLC"),
-  PPB = list(raw_col = "URXPPB", flag_col = "URDPPBLC")
-)
+#BPH
+summary(FullData_allcycles$URXBPH, na.rm = FALSE) #387 missing
+#BP3
+summary(FullData_allcycles$URXBP3, na.rm = FALSE) #387 missing
+#TRS
+summary(FullData_allcycles$URXTRS, na.rm = FALSE) #387 missing
+#BUP
+summary(FullData_allcycles$URXBUP, na.rm = FALSE) #387 missing
+#EPB
+summary(FullData_allcycles$URXEPB, na.rm = FALSE) #387 missing
+#MPB
+summary(FullData_allcycles$URXMPB, na.rm = FALSE) #387 missing
+#PPB
+summary(FullData_allcycles$URXPPB, na.rm = FALSE) #387 missing
 ```
+Note to Ayishat: low missingness in Phenols
+
+```{r}
+FullData_allcycles <- FullData_allcycles %>%
+  mutate(SAMPLE2 = ifelse(SAMPLE == 1 &
+                          URDBPHLC != 1 &
+                          URDBP3LC != 1 &
+                          URDTRSLC != 1 &
+                          URDBUPLC != 1 &
+                          URDEPBLC != 1 &
+                          URDMPBLC != 1 &
+                          URDPPBLC != 1, 1, 0))
+
+table(FullData_allcycles$SAMPLE2) #2139 final sample size 
+
+
+FullData_allcycles2 <- FullData_allcycles %>%
+  mutate(SAMPLE2 = ifelse(SAMPLE == 1 &
+                          URDBPHLC != 1 &
+                          URDBP3LC != 1 &
+                          URDTRSLC != 1 &
+                          URDMPBLC != 1 &
+                          URDPPBLC != 1, 1, 0))
+
+table(FullData_allcycles2$SAMPLE2) #6659 final sample size exclusion of ethyl, butyl parabens 
+
+```
+
+
+note to ayishat: 2139 due to large number of values below LLOD in parabens
+
+###Visualizations
+####NonLog
+```{r}
+boxplot(FullData_allcycles$URXBPH[FullData_allcycles$SAMPLE2 == 1])
+boxplot(FullData_allcycles$URXBP3[FullData_allcycles$SAMPLE2 == 1])
+boxplot(FullData_allcycles$URXTRS[FullData_allcycles$SAMPLE2 == 1])
+boxplot(FullData_allcycles$URXBUP[FullData_allcycles$SAMPLE2 == 1])
+boxplot(FullData_allcycles$URXEPB[FullData_allcycles$SAMPLE2 == 1])
+boxplot(FullData_allcycles$URXMPB[FullData_allcycles$SAMPLE2 == 1])
+boxplot(FullData_allcycles$URXPPB[FullData_allcycles$SAMPLE2 == 1])
+
+```
+####Log
+```{r}
+
+boxplot(log(FullData_allcycles$URXBPH[FullData_allcycles$SAMPLE2 == 1]))
+boxplot(log(FullData_allcycles$URXBP3[FullData_allcycles$SAMPLE2 == 1]))
+boxplot(log(FullData_allcycles$URXTRS[FullData_allcycles$SAMPLE2 == 1]))
+boxplot(log(FullData_allcycles$URXBUP[FullData_allcycles$SAMPLE2 == 1]))
+boxplot(log(FullData_allcycles$URXEPB[FullData_allcycles$SAMPLE2 == 1]))
+boxplot(log(FullData_allcycles$URXMPB[FullData_allcycles$SAMPLE2 == 1]))
+boxplot(log(FullData_allcycles$URXPPB[FullData_allcycles$SAMPLE2 == 1]))
+```
+
+
+
 
 ```{r}
 # Example: Suppose you join on 'cycleyr'
-FullData_allcycles$cycleyr <- as.character(FullData_allcycles$cycleyr)
-lod_long$cycleyr <- as.character(lod_long$cycleyr)
-
-for (metab in names(metabolites)) {
-  raw_col <- metabolites[[metab]]$raw_col
-  flag_col <- metabolites[[metab]]$flag_col
-
-  FullData_allcycles[[metab]] <- FullData_allcycles[[raw_col]]
-
-  lod_vector <- dplyr::left_join(
-    data.frame(cycleyr = FullData_allcycles$cycleyr),
-    lod_long[lod_long$metab == metab, c("cycleyr", "lod")],
-    by = "cycleyr"
-  )$lod
-
-  mask <- !is.na(FullData_allcycles[[flag_col]]) & FullData_allcycles[[flag_col]] == 1
-  FullData_allcycles[[metab]][mask] <- lod_vector[mask] / sqrt(2)
-
-  metab_sd <- sd(FullData_allcycles[[metab]][FullData_allcycles$SAMPLE == 1], na.rm = TRUE)
-  cutoff <- 5 * metab_sd
-  FullData_allcycles$SAMPLE2[FullData_allcycles[[metab]] > cutoff] <- 0
-
-  cat("\n---", metab, "---\n")
-  cat("Standard Deviation:", round(metab_sd, 3), "\n")
-  cat("5x Standard Deviation Cutoff:", round(cutoff, 3), "\n")
-  cat("Number of Outliers (SAMPLE2 = 0):", sum(FullData_allcycles$SAMPLE2 == 0, na.rm = TRUE), "\n")
-  cat("Post-Outlier Standard Deviation:", 
-      round(sd(FullData_allcycles[[metab]][FullData_allcycles$SAMPLE2 == 1], na.rm = TRUE), 3), "\n")
-}
+# FullData_allcycles$cycleyr <- as.character(FullData_allcycles$cycleyr)
+# lod_long$cycleyr <- as.character(lod_long$cycleyr)
+# 
+# for (metab in names(metabolites)) {
+#   raw_col <- metabolites[[metab]]$raw_col
+#   flag_col <- metabolites[[metab]]$flag_col
+# 
+#   FullData_allcycles[[metab]] <- FullData_allcycles[[raw_col]]
+# 
+#   lod_vector <- dplyr::left_join(
+#     data.frame(cycleyr = FullData_allcycles$cycleyr),
+#     lod_long[lod_long$metab == metab, c("cycleyr", "lod")],
+#     by = "cycleyr"
+#   )$lod
+# 
+#   mask <- !is.na(FullData_allcycles[[flag_col]]) & FullData_allcycles[[flag_col]] == 1
+#   FullData_allcycles[[metab]][mask] <- lod_vector[mask] / sqrt(2)
+# 
+#   metab_sd <- sd(FullData_allcycles[[metab]][FullData_allcycles$SAMPLE == 1], na.rm = TRUE)
+#   cutoff <- 5 * metab_sd
+#   FullData_allcycles$SAMPLE2[FullData_allcycles[[metab]] > cutoff] <- 0
+# 
+#   cat("\n---", metab, "---\n")
+#   cat("Standard Deviation:", round(metab_sd, 3), "\n")
+#   cat("5x Standard Deviation Cutoff:", round(cutoff, 3), "\n")
+#   cat("Number of Outliers (SAMPLE2 = 0):", sum(FullData_allcycles$SAMPLE2 == 0, na.rm = TRUE), "\n")
+#   cat("Post-Outlier Standard Deviation:", 
+#       round(sd(FullData_allcycles[[metab]][FullData_allcycles$SAMPLE2 == 1], na.rm = TRUE), 3), "\n")
+# }
 ```
 
 
-```{r}
-# Define metabolites, their raw columns, flag columns, and their respective LOD values
-metabolites <- list(
-  BPH = list(raw_col = "URXBPH", flag_col = "URDBPHLC", lod = 0.2), 
-  BP3 = list(raw_col = "URXBP3", flag_col = "URDBP3LC", lod = 0.4),
-  TRS = list(raw_col = "URXTRS", flag_col = "URDTRSLC", lod = 1.7),
-  BUP = list(raw_col = "URXBUP", flag_col = "URDBUPLC", lod = 0.1),
-  EPB = list(raw_col = "URXEPB", flag_col = "URDEPBLC", lod = 1.0),
-  MPB = list(raw_col = "URXMPB", flag_col = "URDMPBLC", lod = 1.0),
-  PPB = list (raw_col = "URXPPB", flag_col = "URDPPBLC", lod = 0.1)
-)
 
-# Replace flagged values with LOD/sqrt(2) for all metabolites (LEAVE THIS FUNCTION AND RUN AS IS)
-for (metab in names(metabolites)) {
-  
-  # Extract the columns for raw values, flag columns, and LOD values
-  raw_col <- metabolites[[metab]]$raw_col
-  flag_col <- metabolites[[metab]]$flag_col
-  lod <- metabolites[[metab]]$lod
-  
-  # Create metabolite column by copying the raw data
-  FullData_allcycles[[metab]] <- FullData_allcycles[[raw_col]]
-  
-  # For flag columns (i.e., below-detection or missing), replace flagged values with LOD/sqrt(2)
-  FullData_allcycles[[metab]][FullData_allcycles[[flag_col]] == 1] <- lod / sqrt(2)
-  
-  # Calculate the standard deviation of the metabolite for complete cases (nonmissingexposure/covariatesetc)
-  metab_sd <- sd(FullData_allcycles[[metab]][FullData_allcycles$SAMPLE == 1], na.rm = TRUE)
-  
-  # Set outlier cutoff as 5 * SD
-  cutoff <- 5 * metab_sd
-  
-  # Flag outliers (if metabolite value > 5*SD) by setting SAMPLE2 to 0
-  FullData_allcycles$SAMPLE2[FullData_allcycles[[metab]] > cutoff] <- 0
-  
-  # Output some summary statistics for each metabolite
-  cat("\n---", metab, "---\n")
-  cat("Standard Deviation:", round(metab_sd, 3), "\n")
-  cat("5x Standard Deviation Cutoff:", round(cutoff, 3), "\n")
-  cat("Number of Outliers (SAMPLE2 = 0):", sum(FullData_allcycles$SAMPLE2 == 0, na.rm = TRUE), "\n")
-  cat("Post-Outlier Standard Deviation:", round(sd(FullData_allcycles[[metab]][FullData_allcycles$SAMPLE2 == 1], na.rm = TRUE), 3), "\n")
-}
-
-```
 
 *Marshae Note to self: RESOLVED
 The detection limits were constant for all of the analytes in the data set. Two variables are provided for each of these analytes. The variable name ending in “LC” (ex., URDBPHLC) indicates whether the result was below the limit of detection: the value “0” means that the result was at or above the limit of detection, “1” indicates that the result was below the limit of detection. For analytes with analytic results below the lower limit of detection (ex., URDBPHLC=1), an imputed fill value was placed in the analyte results field. This value is the lower limit of detection divided by square root of 2 (LLOD/sqrt[2]). The other variable prefixed URX (ex., URXBPH) provides the analytic result for that analyte.---2015/2016 documentation NHANES
@@ -362,142 +380,20 @@ The detection limits were constant for all of the analytes in the data set. Two 
 
 
 
-###Replace missingness
-
-```{r}
-
-#replace missingness (REPLACE WITH PHENOLS )
-FullData_allcycles$SAMPLE2<-ifelse(
-  is.na(FullData_allcycles$BPH)|
-  is.na(FullData_allcycles$BP3)|
-  is.na(FullData_allcycles$TRS)|
-  is.na(FullData_allcycles$BUP)|
-  is.na(FullData_allcycles$EPB)|
-  is.na(FullData_allcycles$PPB)|  
-  is.na(FullData_allcycles$MPB),
-  0, FullData_allcycles$SAMPLE2
-)
-
-table(FullData_allcycles$SAMPLE2, useNA = "ifany") #9,624 participants, 3528 were removed, none missing
-
-
-```
-Marshae note to Ayishat: #9,758 participants, 3449 were removed
-
-###LOG Transformations
-
-```{r}
-# 1. Remove existing BPH_LOG column if it exists
-FullData_allcycles$BPH_LOG <- NULL
-
-# 2. Calculate means and SD for thresholding
-mu <- mean(FullData_allcycles$BPH, na.rm = TRUE)
-sigma <- sd(FullData_allcycles$BPH, na.rm = TRUE)
-
-# 3. Subset data for 5 SD and 3 SD
-bph_5sd <- FullData_allcycles[ FullData_allcycles$BPH < (mu + 5*sigma), ]
-bph_3sd <- FullData_allcycles[ FullData_allcycles$BPH < (mu + 3*sigma), ]
-
-# 4. Log transform in each subset
-bph_5sd$BPH_LOG <- log(bph_5sd$BPH)
-bph_3sd$BPH_LOG <- log(bph_3sd$BPH)
-
-# 5. Plot histograms side by side for direct comparison
-par(mfrow = c(1,2))
-hist(bph_5sd$BPH_LOG, breaks = 100,
-     main = "Histogram log(BPH), <5 SD",
-     xlab = "log(BPH) (5 SD cut)")
-hist(bph_3sd$BPH_LOG, breaks = 100,
-     main = "Histogram log(BPH), <3 SD",
-     xlab = "log(BPH) (3 SD cut)")
-par(mfrow = c(1,1))
-```
-
-
-```{r}
-hist(log(FullData_allcycles$TRS[FullData_allcycles$SAMPLE2 == 1]), breaks=100)
-```
-
-```{r}
-#create log transformations now so they are in survey + subesets 
-
-#learning visual look at histogram of normal scale values: 
-
-table(FullData_allcycles$BPH == 0)  #none        # How many zeros?
-table(FullData_allcycles$BPH < 0)    #none       # Any negatives?
-summary(FullData_allcycles$BPH)             # Full summary
-
-mu <- mean(FullData_allcycles$BPH_LOG, na.rm=TRUE)
-sigma <- sd(FullData_allcycles$BPH_LOG, na.rm=TRUE)
-# Keep only those within 3 SD:
-FullData_allcycles_no_outliers <- subset(
-  FullData_allcycles,
-  BPH_LOG < (mu + 3*sigma) & BPH_LOG > (mu - 3*sigma)
-)
-
-#BPH
-hist(FullData_allcycles$BPH, breaks=100)
-#now log transform and look at the new histogram. You should see difference. 
-FullData_allcycles$BPH_LOG<-log(FullData_allcycles$BPH)
-
-hist(FullData_allcycles$BPH_LOG,breaks=100)
-
-#BP3
-hist(FullData_allcycles$BP3)
-FullData_allcycles$BP3_LOG<-log(FullData_allcycles$BP3)
-hist(FullData_allcycles$BP3_LOG)
-
-#BPF
-hist(FullData_allcycles$BPF)
-FullData_allcycles$BPF_LOG<-log(FullData_allcycles$BPF)
-hist(FullData_allcycles$BPF_LOG)
-
-#BPS
-hist(FullData_allcycles$BPS)
-FullData_allcycles$BPS_LOG<-log(FullData_allcycles$BPS)
-hist(FullData_allcycles$BPS_LOG)
-
-#TRS
-hist(FullData_allcycles$TRS)
-FullData_allcycles$TRS_LOG<-log(FullData_allcycles$TRS)
-hist(FullData_allcycles$TRS_LOG)
-
-#BUP
-hist(FullData_allcycles$BUP)
-FullData_allcycles$BUP_LOG<-log(FullData_allcycles$BUP)
-hist(FullData_allcycles$BUP_LOG)
-
-#EPB
-hist(FullData_allcycles$EPB)
-FullData_allcycles$EPB_LOG<-log(FullData_allcycles$EPB)
-hist(FullData_allcycles$EPB_LOG)
-
-#MPB
-hist(FullData_allcycles$MPB)
-FullData_allcycles$MPB_LOG<-log(FullData_allcycles$MPB)
-hist(FullData_allcycles$MPB_LOG)
-
-#PPB
-hist(FullData_allcycles$PPB)
-FullData_allcycles$PPB_LOG<-log(FullData_allcycles$PPB)
-hist(FullData_allcycles$PPB_LOG)
-
-
-```
-
 
 ##Weights
+
+####fulldataset
 ```{r}
 #change survey weights 
 FullData_allcycles <- FullData_allcycles %>%
   mutate(SURVWEIGHT = case_when(
-    cycleyr >= 1 & !is.na(WTSC2YR) ~ WTSC2YR * (1 / 7),
+    cycleyr >= 1 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
     cycleyr >= 2 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
     cycleyr >= 3 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
-    cycleyr >= 4 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
-    cycleyr >= 5 & !is.na(WTSA2YR) ~ WTSA2YR * (1 / 7),
+    cycleyr >= 4 & !is.na(WTSA2YR) ~ WTSA2YR * (1 / 7),
+    cycleyr >= 5 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
     cycleyr >= 6 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
-    cycleyr >= 7 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
     TRUE ~ NA_real_
   ))
 
@@ -507,7 +403,31 @@ write_csv(FullData_allcycles, "~/Documents/Github/Phenols-Analysis/Phenols_DataC
 saveRDS(FullData_allcycles, "~/Documents/Github/Phenols-Analysis/Phenols_DataClean/FullData_allcyclesFINAL.rds")
 ```
 
+
+
+
+
+####E/Bexclusion
 ```{r}
-summary(FullData_allcycles$SDMVPSU)
+#change survey weights 
+FullData_allcycles2 <- FullData_allcycles2 %>%
+  mutate(SURVWEIGHT = case_when(
+    cycleyr >= 1 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
+    cycleyr >= 2 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
+    cycleyr >= 3 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
+    cycleyr >= 4 & !is.na(WTSA2YR) ~ WTSA2YR * (1 / 7),
+    cycleyr >= 5 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
+    cycleyr >= 6 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
+    TRUE ~ NA_real_
+  ))
+
+
+write_csv(FullData_allcycles2, "~/Documents/Github/Phenols-Analysis/Phenols_DataClean/FullData_allcyclesFINAL2.csv")
+
+saveRDS(FullData_allcycles2, "~/Documents/Github/Phenols-Analysis/Phenols_DataClean/FullData_allcyclesFINAL2.rds")
+```
+
+
+
 ```
 
