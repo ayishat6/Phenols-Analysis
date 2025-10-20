@@ -234,12 +234,11 @@ print(geomean_table)
 # Step 1 – Run svyquantile for each phenol and save
 
 
-svyquantile(~URXBPH_LOG,  design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
-svyquantile(~URXBP3_LOG, design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
+svyquantile(~URXBPH_LOG, design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
+svyquantile(~URXBP3_LOG,  design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
 svyquantile(~URXTRS_LOG,  design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
 svyquantile(~URXBUP_LOG,  design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
 svyquantile(~URXEPB_LOG,  design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
-
 svyquantile(~URXMPB_LOG,  design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
 svyquantile(~URXPPB_LOG,  design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
 
@@ -247,6 +246,31 @@ svyquantile(~URXPPB_LOG,  design = survey, quantiles = c(0.25, 0.75), na.rm = TR
 
 ```
 
+
+
+```{r}
+table(survey$variables$URDBPHLC) #9287/(9287+807)
+table(survey$variables$URDBP3LC) #9706/(9706+388)
+table(survey$variables$URDTRSLC) #7546/(7546+2548)
+table(survey$variables$URDBUPLC)#3716/(3716+6378)
+table(survey$variables$URDEPBLC)#4999/(4999+5095)
+table(survey$variables$URDMPBLC) #10010/(10010+84)
+table(survey$variables$URDPPBLC) #9607/(9607+487)
+
+
+
+sum(9287/(9287+807))
+sum(9706/(9706+388))
+sum(7546/(7546+2548))
+sum(3716/(3716+6378))
+sum(4999/(4999+5095))
+ sum(10010/(10010+84))
+ sum(9607/(9607+487))
+
+ 
+ table(FullDataFOODSEC)
+
+```
 
 
 # MAIN ANALYSIS
