@@ -196,6 +196,9 @@ tbl_summary(
   bold_labels()%>%
   add_overall()
 ```
+```{r}
+table(FullData_allcyclesFINAL2$FOODSEC, useNA="ifany")
+```
 
 
 # GEOMETRIC MEANS
