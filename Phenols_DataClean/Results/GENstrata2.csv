@@ -1,57 +1,57 @@
-FOODSEC,SEX,contrast,estimate,lower.CL,upper.CL,exp.estimate,exp.lower.CL,exp.upper.CL,%Difference,%Lower,%Higher,SE,t.ratio,p.value,model
-1,Male,,,,,,,,,,,,,,
-2,Male,FOODSEC2 - FOODSEC1,0.01,-0.16,0.18,1.01,0.85,1.20,1.00,-14.76,19.68,0.06,0.15,1.00,BPA
-3,Male,FOODSEC3 - FOODSEC1,0.04,-0.13,0.21,1.04,0.88,1.23,3.67,-12.49,22.80,0.06,0.56,0.94,BPA
-4,Male,FOODSEC4 - FOODSEC1,-0.05,-0.24,0.13,0.95,0.79,1.14,-5.33,-21.18,13.70,0.07,-0.79,0.86,BPA
-1,Female,,,,,,,,,,,,,,
-2,Female,FOODSEC2 - FOODSEC1,0.02,-0.12,0.17,1.02,0.89,1.18,2.37,-11.42,18.31,0.05,0.43,0.97,BPA
-3,Female,FOODSEC3 - FOODSEC1,0.11,-0.04,0.25,1.11,0.96,1.28,11.07,-3.84,28.30,0.05,1.92,0.23,BPA
-4,Female,FOODSEC4 - FOODSEC1,0.20,-0.01,0.40,1.22,0.99,1.49,21.54,-0.77,48.86,0.08,2.53,0.06,BPA
-1,Male,,,,,,,,,,,,,,
-2,Male,FOODSEC2 - FOODSEC1,-0.20,-0.45,0.06,0.82,0.64,1.06,-17.79,-36.46,6.37,0.10,-2.00,0.20,BP3
-3,Male,FOODSEC3 - FOODSEC1,-0.33,-0.57,-0.09,0.72,0.57,0.92,-27.76,-43.18,-8.16,0.09,-3.57,0.00,BP3
-4,Male,FOODSEC4 - FOODSEC1,-0.27,-0.59,0.05,0.77,0.56,1.06,-23.41,-44.43,5.55,0.12,-2.19,0.14,BP3
-1,Female,,,,,,,,,,,,,,
-2,Female,FOODSEC2 - FOODSEC1,-0.28,-0.60,0.04,0.75,0.55,1.04,-24.51,-45.13,3.87,0.12,-2.32,0.10,BP3
-3,Female,FOODSEC3 - FOODSEC1,-0.12,-0.39,0.16,0.89,0.68,1.17,-10.99,-32.38,17.17,0.10,-1.12,0.68,BP3
-4,Female,FOODSEC4 - FOODSEC1,-0.21,-0.60,0.17,0.81,0.55,1.19,-19.21,-45.00,18.67,0.15,-1.46,0.47,BP3
-1,Male,,,,,,,,,,,,,,
-2,Male,FOODSEC2 - FOODSEC1,-0.18,-0.48,0.11,0.83,0.62,1.12,-16.78,-38.21,12.07,0.11,-1.62,0.37,TRS
-3,Male,FOODSEC3 - FOODSEC1,-0.20,-0.48,0.07,0.82,0.62,1.08,-18.47,-38.22,7.59,0.11,-1.94,0.22,TRS
-4,Male,FOODSEC4 - FOODSEC1,-0.20,-0.52,0.11,0.82,0.59,1.12,-18.48,-40.73,12.12,0.12,-1.69,0.34,TRS
-1,Female,,,,,,,,,,,,,,
-2,Female,FOODSEC2 - FOODSEC1,-0.15,-0.43,0.14,0.86,0.65,1.15,-13.74,-35.07,14.61,0.11,-1.37,0.52,TRS
-3,Female,FOODSEC3 - FOODSEC1,-0.09,-0.35,0.17,0.91,0.70,1.19,-8.65,-29.68,18.69,0.10,-0.91,0.80,TRS
-4,Female,FOODSEC4 - FOODSEC1,-0.37,-0.67,-0.07,0.69,0.51,0.93,-31.04,-48.96,-6.83,0.11,-3.25,0.01,TRS
-1,Male,,,,,,,,,,,,,,
-2,Male,FOODSEC2 - FOODSEC1,-0.02,-0.17,0.13,0.98,0.85,1.14,-1.85,-15.36,13.81,0.06,-0.33,0.99,BUP
-3,Male,FOODSEC3 - FOODSEC1,0.01,-0.14,0.16,1.01,0.87,1.17,1.07,-12.70,17.01,0.06,0.19,1.00,BUP
-4,Male,FOODSEC4 - FOODSEC1,0.04,-0.13,0.22,1.05,0.87,1.25,4.59,-12.53,25.07,0.07,0.66,0.91,BUP
-1,Female,,,,,,,,,,,,,,
-2,Female,FOODSEC2 - FOODSEC1,-0.29,-0.47,-0.11,0.75,0.62,0.89,-25.35,-37.66,-10.60,0.07,-4.27,0.00,BUP
-3,Female,FOODSEC3 - FOODSEC1,-0.30,-0.54,-0.05,0.74,0.58,0.95,-25.69,-41.99,-4.81,0.09,-3.16,0.01,BUP
-4,Female,FOODSEC4 - FOODSEC1,-0.64,-0.92,-0.36,0.53,0.40,0.70,-47.15,-59.96,-30.25,0.11,-6.05,0.00,BUP
-1,Male,,,,,,,,,,,,,,
-2,Male,FOODSEC2 - FOODSEC1,-0.01,-0.21,0.18,0.99,0.81,1.20,-1.31,-19.03,20.29,0.08,-0.17,1.00,EPB
-3,Male,FOODSEC3 - FOODSEC1,0.11,-0.11,0.34,1.12,0.89,1.40,11.93,-10.59,40.13,0.09,1.32,0.55,EPB
-4,Male,FOODSEC4 - FOODSEC1,-0.12,-0.32,0.09,0.89,0.73,1.09,-10.89,-27.08,8.89,0.08,-1.51,0.43,EPB
-1,Female,,,,,,,,,,,,,,
-2,Female,FOODSEC2 - FOODSEC1,-0.24,-0.50,0.02,0.79,0.61,1.02,-21.08,-39.05,2.19,0.10,-2.41,0.08,EPB
-3,Female,FOODSEC3 - FOODSEC1,-0.24,-0.50,0.01,0.78,0.61,1.01,-21.69,-39.18,0.82,0.10,-2.55,0.06,EPB
-4,Female,FOODSEC4 - FOODSEC1,-0.51,-0.78,-0.23,0.60,0.46,0.79,-39.89,-54.39,-20.80,0.10,-4.86,0.00,EPB
-1,Male,,,,,,,,,,,,,,
-2,Male,FOODSEC2 - FOODSEC1,-0.05,-0.30,0.21,0.96,0.74,1.23,-4.43,-25.79,23.07,0.10,-0.47,0.96,MPB
-3,Male,FOODSEC3 - FOODSEC1,0.08,-0.23,0.38,1.08,0.80,1.46,7.87,-20.47,46.29,0.12,0.65,0.91,MPB
-4,Male,FOODSEC4 - FOODSEC1,0.06,-0.30,0.42,1.06,0.74,1.53,6.46,-25.80,52.75,0.14,0.46,0.97,MPB
-1,Female,,,,,,,,,,,,,,
-2,Female,FOODSEC2 - FOODSEC1,-0.17,-0.41,0.07,0.84,0.66,1.07,-15.71,-33.53,6.89,0.09,-1.89,0.24,MPB
-3,Female,FOODSEC3 - FOODSEC1,-0.20,-0.46,0.07,0.82,0.63,1.07,-17.97,-37.10,6.99,0.10,-1.96,0.21,MPB
-4,Female,FOODSEC4 - FOODSEC1,-0.30,-0.63,0.03,0.74,0.53,1.03,-25.80,-46.52,2.97,0.12,-2.40,0.09,MPB
-1,Male,,,,,,,,,,,,,,
-2,Male,FOODSEC2 - FOODSEC1,-0.05,-0.34,0.23,0.95,0.71,1.26,-5.16,-28.73,26.20,0.11,-0.49,0.96,PPB
-3,Male,FOODSEC3 - FOODSEC1,-0.07,-0.44,0.30,0.94,0.65,1.35,-6.43,-35.34,35.42,0.14,-0.47,0.96,PPB
-4,Male,FOODSEC4 - FOODSEC1,0.04,-0.37,0.44,1.04,0.69,1.56,3.58,-31.08,55.66,0.15,0.23,1.00,PPB
-1,Female,,,,,,,,,,,,,,
-2,Female,FOODSEC2 - FOODSEC1,-0.31,-0.61,-0.01,0.74,0.54,0.99,-26.46,-45.59,-0.59,0.11,-2.68,0.04,PPB
-3,Female,FOODSEC3 - FOODSEC1,-0.26,-0.62,0.10,0.77,0.54,1.10,-23.16,-46.35,10.05,0.14,-1.93,0.22,PPB
-4,Female,FOODSEC4 - FOODSEC1,-0.59,-1.01,-0.18,0.55,0.37,0.84,-44.62,-63.45,-16.08,0.16,-3.74,0.00,PPB
+SEX,FOODSEC,contrast,exp.estimate,exp.lower.CL,exp.upper.CL,%Difference,%Lower,%Higher,p.value,model
+Male,1,Ref,,,,,,,,
+Male,2,Marginally Food Secure - Fully Food Secure,1.01,0.86,1.19,1.08,-14.46,19.43,1,BPA
+Male,3,Low Food Security - Fully Food Secure,1.04,0.88,1.23,3.76,-12.46,22.99,0.94,BPA
+Male,4,Very Low Food Secure - Fully Food Secure,0.95,0.79,1.14,-5.35,-21.46,14.06,0.86,BPA
+Female,1,Ref,,,,,,,,
+Female,2,Marginally Food Secure - Fully Food Secure,1.02,0.89,1.18,2.5,-11.32,18.47,0.97,BPA
+Female,3,Low Food Security - Fully Food Secure,1.11,0.96,1.28,11.08,-3.9,28.41,0.23,BPA
+Female,4,Very Low Food Secure - Fully Food Secure,1.21,0.99,1.49,21.45,-1.04,49.05,0.07,BPA
+Male,1,,,,,,,,,
+Male,2,Marginally Food Secure - Fully Food Secure,0.84,0.65,1.09,-16.08,-35.4,9.02,0.3,BP3
+Male,3,Low Food Security - Fully Food Secure,0.74,0.58,0.94,-26.04,-41.81,-5.99,0.01,BP3
+Male,4,Very Low Food Secure - Fully Food Secure,0.78,0.57,1.09,-21.55,-43.36,8.66,0.21,BP3
+Female,1,,,,,,,,,
+Female,2,Marginally Food Secure - Fully Food Secure,0.77,0.56,1.07,-23.03,-44.39,6.54,0.16,BP3
+Female,3,Low Food Security - Fully Food Secure,0.91,0.69,1.21,-8.78,-31,20.6,0.82,BP3
+Female,4,Very Low Food Secure - Fully Food Secure,0.82,0.56,1.21,-17.51,-43.95,21.41,0.56,BP3
+Male,1,,,,,,,,,
+Male,2,Marginally Food Secure - Fully Food Secure,0.84,0.62,1.13,-16.23,-37.84,12.91,0.41,TRS
+Male,3,Low Food Security - Fully Food Secure,0.82,0.62,1.08,-17.87,-37.81,8.47,0.25,TRS
+Male,4,Very Low Food Secure - Fully Food Secure,0.82,0.6,1.13,-17.63,-40.19,13.44,0.39,TRS
+Female,1,,,,,,,,,
+Female,2,Marginally Food Secure - Fully Food Secure,0.87,0.65,1.15,-13.31,-34.9,15.43,0.56,TRS
+Female,3,Low Food Security - Fully Food Secure,0.92,0.71,1.2,-7.74,-29.12,20.09,0.85,TRS
+Female,4,Very Low Food Secure - Fully Food Secure,0.7,0.51,0.94,-30.31,-48.6,-5.52,0.01,TRS
+Male,1,,,,,,,,,
+Male,2,Marginally Food Secure - Fully Food Secure,0.99,0.85,1.15,-0.83,-14.6,15.17,1,BUP
+Male,3,Low Food Security - Fully Food Secure,1.02,0.88,1.19,2.28,-12.01,18.89,0.98,BUP
+Male,4,Very Low Food Secure - Fully Food Secure,1.06,0.88,1.27,5.93,-11.74,27.14,0.84,BUP
+Female,1,,,,,,,,,
+Female,2,Marginally Food Secure - Fully Food Secure,0.75,0.63,0.9,-24.64,-37.05,-9.77,0,BUP
+Female,3,Low Food Security - Fully Food Secure,0.75,0.59,0.96,-24.73,-41.24,-3.58,0.02,BUP
+Female,4,Very Low Food Secure - Fully Food Secure,0.53,0.41,0.7,-46.55,-59.43,-29.59,0,BUP
+Male,1,,,,,,,,,
+Male,2,Marginally Food Secure - Fully Food Secure,1,0.82,1.22,0.12,-17.97,22.2,1,EPB
+Male,3,Low Food Security - Fully Food Secure,1.14,0.91,1.43,13.78,-9.33,42.78,0.44,EPB
+Male,4,Very Low Food Secure - Fully Food Secure,0.91,0.74,1.11,-9.31,-25.94,11.07,0.59,EPB
+Female,1,,,,,,,,,
+Female,2,Marginally Food Secure - Fully Food Secure,0.8,0.62,1.04,-20.04,-38.24,3.51,0.11,EPB
+Female,3,Low Food Security - Fully Food Secure,0.8,0.62,1.03,-20.29,-38.25,2.89,0.1,EPB
+Female,4,Very Low Food Secure - Fully Food Secure,0.61,0.46,0.81,-38.94,-53.86,-19.21,0,EPB
+Male,1,,,,,,,,,
+Male,2,Marginally Food Secure - Fully Food Secure,0.96,0.75,1.23,-3.93,-25.21,23.42,0.97,MPB
+Male,3,Low Food Security - Fully Food Secure,1.09,0.8,1.47,8.59,-19.99,47.37,0.89,MPB
+Male,4,Very Low Food Secure - Fully Food Secure,1.06,0.74,1.53,6.41,-26.1,53.22,0.97,MPB
+Female,1,,,,,,,,,
+Female,2,Marginally Food Secure - Fully Food Secure,0.85,0.67,1.08,-14.99,-33.01,7.87,0.28,MPB
+Female,3,Low Food Security - Fully Food Secure,0.82,0.63,1.07,-17.85,-37.03,7.18,0.22,MPB
+Female,4,Very Low Food Secure - Fully Food Secure,0.74,0.53,1.03,-26.1,-46.97,2.98,0.09,MPB
+Male,1,,,,,,,,,
+Male,2,Marginally Food Secure - Fully Food Secure,0.95,0.72,1.27,-4.53,-28.3,27.13,0.97,PPB
+Male,3,Low Food Security - Fully Food Secure,0.94,0.65,1.36,-5.65,-34.7,36.34,0.98,PPB
+Male,4,Very Low Food Secure - Fully Food Secure,1.04,0.69,1.55,3.64,-30.68,54.94,1,PPB
+Female,1,,,,,,,,,
+Female,2,Marginally Food Secure - Fully Food Secure,0.74,0.55,1,-25.71,-44.96,0.27,0.05,PPB
+Female,3,Low Food Security - Fully Food Secure,0.77,0.54,1.1,-22.96,-46.2,10.31,0.23,PPB
+Female,4,Very Low Food Secure - Fully Food Secure,0.55,0.36,0.84,-44.82,-63.63,-16.28,0,PPB
