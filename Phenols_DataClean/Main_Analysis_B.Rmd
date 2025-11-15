@@ -1,0 +1,1105 @@
+---
+title: "Data Analyis_MainAnalysis"
+author: "Marshae Nickelberry"
+date: "2024-06-24"
+output:
+  html_document: default
+  pdf_document: default
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+# Load packages and datasets
+```{r, echo=FALSE}
+library(here)
+library(knitr)
+library(ggplot2)
+library(ggpubr)
+library(RColorBrewer)
+library(gridExtra)
+library(survey)
+library(tidyr)
+library(dplyr)
+library(expss)
+library(broom)
+library(plyr)
+library(gtsummary)
+library(readxl)
+library(emmeans)
+library(corrplot)
+
+```
+
+## Knit
+
+```{r}
+knitr::opts_knit$set(root.dir = here::here())
+```
+
+## Functions
+```{r}
+# Function to exponentiate coefficients and include additional statistics
+exp_coeffs <- function(model) {
+  # Extract coefficients, standard errors, t-values, and p-values
+  coefs <- summary(model)$coefficients
+  exp_coefs <- exp(coefs[, 1])  # Exponentiated coefficients
+  conf_int <- exp(confint(model))  # Exponentiated confidence intervals
+  
+  # Combine into a data frame
+  exp_results <- data.frame(
+    Term = rownames(coefs),
+    Estimate = exp_coefs,
+    `Std. Error` = coefs[, 2],
+    `t value` = coefs[, 3],
+    `Pr(>|t|)` = coefs[, 4],
+    `2.5 %` = conf_int[, 1],
+    `97.5 %` = conf_int[, 2]
+  )
+  
+  return(exp_results)
+}
+
+```
+
+
+#More Data Transformations
+```{r, include=FALSE}
+FullData_allcyclesFINAL2<-read.csv("FullData_allcyclesFINAL2.csv")
+
+#FullData_allcyclesFINAL2<-readRDS("FullData_allcyclesFINAL2.rds")
+
+#change units of creatinine (mg/dl)
+FullData_allcyclesFINAL2$URXUCR_final <- FullData_allcyclesFINAL2$URXUCR_final * 10000
+
+#dropped those with missing creatinine
+FullData_allcyclesFINAL2 = FullData_allcyclesFINAL2[!is.na(FullData_allcyclesFINAL2$URXUCR_final), ] 
+
+
+table(FullData_allcyclesFINAL2$FOODSEC, useNA="ifany")
+
+#rename variables 
+FullData_allcyclesFINAL2$SEX <- factor(FullData_allcyclesFINAL2$SEX, levels = c(1, 2), labels = c("Male", "Female"))
+
+
+
+FullData_allcyclesFINAL2$RACEETH <- factor(FullData_allcyclesFINAL2$RACEETH, levels = c(1,2,3,4,5), labels = c("NH White", "NH Black", "Mexican-American", "Other Hispanic", "Other"))
+
+FullData_allcyclesFINAL2$EDUCAT <- factor(FullData_allcyclesFINAL2$EDUCAT, levels=c(1,2,3,4), labels= c("Less than 9th grade", "High school graduate/GED or equivalent equivalent","Some college or AA degree", "College or above")) 
+
+FullData_allcyclesFINAL2$PIRCAT <- factor(FullData_allcyclesFINAL2$PIRCAT, levels=c(1,2,3,4,5), labels= c("Low Poverty","Near Poverty", "Middle Income","Upper-Middle Income", "High Income")) 
+
+FullData_allcyclesFINAL2$FOODSEC <- factor(FullData_allcyclesFINAL2$FOODSEC, levels = c(1, 2, 3, 4), labels= c("Fully Food Secure", "Marginally Food Secure", "Low Food Security", "Very Low Food Secure"))
+
+FullData_allcyclesFINAL2$cycleyr <- factor(FullData_allcyclesFINAL2$cycleyr, levels = c(1,2,3,4,5,6), labels = c("2005-2006","2007-2008","2009-2010","2011-2012","2013-2014", "2015-2016")) 
+
+FullData_allcyclesFINAL2$AGEGROUP <- factor(
+  FullData_allcyclesFINAL2$AGEGROUP,
+  levels = c("18-31", "32-46", "47-63", "64-85")
+)
+
+table(FullData_allcyclesFINAL2$FOODSEC)
+
+
+FullData_allcyclesFINAL2 <- FullData_allcyclesFINAL2 %>%
+  mutate(PIR_POLICY = factor(
+    case_when(
+      PIRCAT == "Low Poverty" ~ "Below Poverty",
+      PIRCAT %in% c("Near Poverty", "Middle Income") ~ "Near/Working Class",
+      PIRCAT %in% c("Upper-Middle Income", "High Income") ~ "High Income"
+    ),
+    levels = c("Below Poverty", "Near/Working Class", "High Income")
+  ))
+
+
+```
+
+log phenols 
+```{r}
+library(dplyr)
+
+FullData_allcyclesFINAL2 <- FullData_allcyclesFINAL2 %>%
+  mutate(
+    URXBPH_LOG = log(URXBPH),
+    URXBP3_LOG = log(URXBP3),
+    URXTRS_LOG = log(URXTRS),
+    URXBUP_LOG = log(URXBUP),
+    URXEPB_LOG = log(URXEPB),
+    URXMPB_LOG = log(URXMPB),
+    URXPPB_LOG = log(URXPPB)
+  )
+```
+
+
+# Survey Package 
+
+now we need to use the survey package to do survey analysis 
+
+
+```{r}
+FullData_allcyclesFINAL2 <- subset(FullData_allcyclesFINAL2, SAMPLE2 == 1)
+
+
+```
+
+
+```{r}
+survey <-svydesign(ids = ~SDMVPSU,
+          strata = ~SDMVSTRA,
+         weights = ~SURVWEIGHT,
+         nest = TRUE, 
+         data = FullData_allcyclesFINAL2)
+
+
+```
+
+
+#TABLE ONE
+```{r, echo=FALSE}
+
+#class(survey)
+survey %>% 
+  tbl_svysummary(
+    # Use a character variable here. A factor leads to an error
+    by = FOODSEC,
+    # Use include to select variables
+    include = c(SEX, RIDAGEYR, RACEETH, EDUCAT,
+                PIR_POLICY, cycleyr),
+    statistic = list(all_continuous()  ~ "{mean} ({sd})",
+                     all_categorical() ~ "{n}    ({p}%)"),
+    digits = list( all_categorical() ~ c(0, 1))
+  ) %>%
+  modify_header(
+    label = "**Variable**",
+    all_stat_cols()~"**{level}**")%>%
+  modify_caption("Weighted descriptive statistics, by food security status") %>%
+  bold_labels()
+
+
+
+survey_unweighted<-as.data.frame(survey)
+tbl_summary(
+  survey_unweighted,
+    # Use a character variable here. A factor leads to an error
+    by = FOODSEC,
+    # Use include to select variables
+    include = c(SEX, RIDAGEYR, RACEETH, EDUCAT,
+                PIR_POLICY, cycleyr),
+    statistic = list(all_continuous()  ~ "{mean} ({sd})",
+                     all_categorical() ~ "{n}    ({p}%)"),
+    digits = list( all_categorical() ~ c(0, 1))
+  ) %>%
+  modify_header(
+    label = "**Variable**",
+    all_stat_cols()~"**{level}**")%>%
+  modify_caption("Unweighted descriptive statistics, by food security status") %>%
+  bold_labels()%>%
+  add_overall()
+```
+
+
+# GEOMETRIC MEANS
+
+Log transformed values instead for geometric mean reporting.
+
+Realized that NHANES may have updated check log for details 
+
+```{r}
+
+log_means_set2<- svymean(~URXBPH_LOG+URXBP3_LOG+URXTRS_LOG+URXBUP_LOG+URXEPB_LOG+URXMPB_LOG+URXPPB_LOG, design=survey, na.rm = TRUE)
+print(log_means_set2) 
+
+#exponetiate
+
+
+log_means<- coef(log_means_set2) # log-scale means
+geomeans<-exp(log_means)
+log_se <- SE(log_means_set2)  # standard errors on log scale
+
+
+geomean_table <- data.frame(
+  variable = names(log_means),
+  geomean = geomeans
+)
+
+
+print(geomean_table)
+
+
+```
+
+
+#TABLE TWO
+```{r, echo=FALSE}
+# Step 1 – Run svyquantile for each phenol and save
+
+
+svyquantile(~URXBPH_LOG,  design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
+svyquantile(~URXBP3_LOG, design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
+svyquantile(~URXTRS_LOG,  design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
+svyquantile(~URXBUP_LOG,  design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
+svyquantile(~URXEPB_LOG,  design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
+
+svyquantile(~URXMPB_LOG,  design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
+svyquantile(~URXPPB_LOG,  design = survey, quantiles = c(0.25, 0.75), na.rm = TRUE)
+
+
+
+```
+
+
+
+# MAIN ANALYSIS
+
+## Unadjusted analysis
+
+```{r, echo=FALSE}
+#URXBPH_LOG
+
+mod1_unadj<-svyglm(URXBPH_LOG~(FOODSEC) + URXUCR_final, design=survey)
+
+#URXBP3_LOG
+mod2_unadj<-svyglm(URXBP3_LOG~(FOODSEC) + URXUCR_final , design=survey)
+
+#URXTRS_LOG
+mod3_unadj<-svyglm(URXTRS_LOG~(FOODSEC) + URXUCR_final , design=survey)
+
+#URXBUP_LOG
+mod4_unadj<-svyglm(URXBUP_LOG~(FOODSEC) + URXUCR_final,  design=survey)
+
+#URXEPB_LOG
+
+mod5_unadj<-svyglm(URXEPB_LOG~(FOODSEC) + URXUCR_final, design=survey)
+
+#URXMPB_LOG
+mod6_unadj<-svyglm(URXMPB_LOG~(FOODSEC) + URXUCR_final, design=survey)
+
+#URXPPB_LOG
+mod7_unadj<-svyglm(URXPPB_LOG~(FOODSEC) + URXUCR_final, design=survey)
+
+
+
+# Apply the exp function to each model and print the results
+models_unadj<- list(mod1_unadj, mod2_unadj, mod3_unadj, mod4_unadj, mod5_unadj, 
+               mod6_unadj, mod7_unadj )
+
+names(models_unadj) <- c("URXBPH_LOG", "URXBP3_LOG", "URXTRS_LOG", "URXBUP_LOG", "URXEPB_LOG",
+                    "URXMPB_LOG", "URXPPB_LOG")
+
+exp_unadj<- lapply(models_unadj, exp_coeffs)
+
+# Combine all dataframes into one
+unadj_combined_df <- bind_rows(exp_unadj)
+
+#write csv 
+
+write.csv(unadj_combined_df, "Results/Unadjusted_Models3.csv")
+```
+
+## Adjusted (age, sex, education, survey year, race, FIP)
+
+```{r, echo=FALSE}
+#URXBPH_LOG
+mod1c_adj<- svyglm(URXBPH_LOG ~ (FOODSEC) + URXUCR_final + (SEX) + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIR_POLICY) + (cycleyr),design = survey)
+
+
+
+#URXBP3_LOG
+
+mod2c_adj<- svyglm(URXBP3_LOG ~ (FOODSEC) + URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIR_POLICY) + (cycleyr), design = survey)
+
+
+
+#URXTRS_LOG
+
+mod3c_adj<- svyglm(URXTRS_LOG ~ (FOODSEC) + URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIR_POLICY) + (cycleyr), design = survey)
+
+
+
+#MCPP
+mod4c_adj<- svyglm(URXBUP_LOG ~ (FOODSEC) + URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIR_POLICY) + (cycleyr), design = survey)
+
+
+
+#URXEPB_LOG
+
+mod5c_adj<- svyglm(URXEPB_LOG ~ (FOODSEC) + URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIR_POLICY) + (cycleyr), design = survey)
+
+
+
+#URXMPB_LOG
+mod6c_adj<- svyglm(URXMPB_LOG ~ (FOODSEC) + URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (cycleyr), design = survey)
+
+
+
+#URXPPB_LOG
+mod7c_adj<- svyglm(URXPPB_LOG ~ (FOODSEC) + URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIR_POLICY) + (cycleyr), design = survey)
+
+
+
+# Apply the exp function to each model and print the results
+models_adj <- list(mod1c_adj, mod2c_adj, mod3c_adj, mod4c_adj, mod5c_adj, mod6c_adj, mod7c_adj)
+
+names(models_adj) <- c("URXBPH_LOG", "URXBP3_LOG", "URXTRS_LOG", "URXBUP_LOG", "URXEPB_LOG", "URXMPB_LOG", "URXPPB_LOG" )
+
+exp_adj<- lapply(models_adj, exp_coeffs)
+
+# Combine all dataframes into one
+adj_combined_dfs<- bind_rows(exp_adj)
+
+#write csv 
+write.csv(adj_combined_dfs, "Results/Adjusted_Models2.csv")
+```
+
+
+
+```{r, echo=FALSE}
+
+#URXBPH_LOG
+mod1c_adj<- svyglm(URXBPH_LOG ~ (FOODSEC) + URXUCR_final + (SEX) + (RIDAGEYR) +  (EDUCAT)+ (RACEETH) + (PIR_POLICY) + (cycleyr),design = survey)
+
+
+
+#URXBP3_LOG
+
+mod2c_adj<- svyglm(URXBP3_LOG ~ (FOODSEC) + URXUCR_final + SEX + (RIDAGEYR) +  (EDUCAT)+ (RACEETH) + (PIR_POLICY) + (cycleyr), design = survey)
+
+
+
+#URXTRS_LOG
+
+mod3c_adj<- svyglm(URXTRS_LOG ~ (FOODSEC) + URXUCR_final + SEX + (RIDAGEYR) +  (EDUCAT)+ (RACEETH) + (PIR_POLICY) + (cycleyr), design = survey)
+
+
+
+#MCPP
+mod4c_adj<- svyglm(URXBUP_LOG ~ (FOODSEC) + URXUCR_final + SEX + (RIDAGEYR) +  (EDUCAT)+ (RACEETH) + (PIR_POLICY) + (cycleyr), design = survey)
+
+
+
+#URXEPB_LOG
+
+mod5c_adj<- svyglm(URXEPB_LOG ~ (FOODSEC) + URXUCR_final + SEX + (RIDAGEYR) +  (EDUCAT)+ (RACEETH) + (PIR_POLICY) + (cycleyr), design = survey)
+
+
+
+#URXMPB_LOG
+mod6c_adj<- svyglm(URXMPB_LOG ~ (FOODSEC) + URXUCR_final + SEX + (RIDAGEYR) +  (EDUCAT)+ (RACEETH) + (cycleyr), design = survey)
+
+
+
+#URXPPB_LOG
+mod7c_adj<- svyglm(URXPPB_LOG ~ (FOODSEC) + URXUCR_final + SEX + (RIDAGEYR) +  (EDUCAT)+ (RACEETH) + (PIR_POLICY) + (cycleyr), design = survey)
+
+
+
+# Apply the exp function to each model and print the results
+models_adj <- list(mod1c_adj, mod2c_adj, mod3c_adj, mod4c_adj, mod5c_adj, mod6c_adj, mod7c_adj)
+
+names(models_adj) <- c("URXBPH_LOG", "URXBP3_LOG", "URXTRS_LOG", "URXBUP_LOG", "URXEPB_LOG", "URXMPB_LOG", "URXPPB_LOG" )
+
+exp_adj<- lapply(models_adj, exp_coeffs)
+
+# Combine all dataframes into one
+adj_combined_dfs<- bind_rows(exp_adj)
+
+#write csv 
+write.csv(adj_combined_dfs, "Results/Adjusted_Models2b.csv")
+```
+
+##Interaction 
+
+```{r}
+
+FullData_allcyclesFINAL2$food_security <- as.numeric(FullData_allcyclesFINAL2$FOODSEC)
+class(FullData_allcyclesFINAL2$food_security)
+
+
+saveRDS(FullData_allcyclesFINAL2, "FullData_allcyclesFINAL2.rds")
+```
+
+```{r, include=FALSE}
+survey <-svydesign(ids = ~SDMVPSU,
+          strata = ~SDMVSTRA,
+         weights = ~SURVWEIGHT,
+         nest = TRUE, 
+         data = FullData_allcyclesFINAL2)
+
+summary(survey)
+
+
+
+```
+
+###Sex 
+```{r}
+
+# URXBPH_LOG
+I.genmod1 <- svyglm(URXBPH_LOG ~ food_security * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIR_POLICY + cycleyr,
+                    design = survey)
+regTermTest(I.genmod1, ~food_security:SEX)
+
+# URXBP3_LOG
+I.genmod2 <- svyglm(URXBP3_LOG ~ food_security * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIR_POLICY + cycleyr,
+                    design = survey)
+regTermTest(I.genmod2, ~food_security:SEX)
+
+# URXTRS_LOG
+I.genmod3 <- svyglm(URXTRS_LOG ~ food_security * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIR_POLICY + cycleyr,
+                    design = survey)
+regTermTest(I.genmod3, ~food_security:SEX)
+
+# URXBUP_LOG
+I.genmod4 <- svyglm(URXBUP_LOG ~ food_security * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIR_POLICY + cycleyr,
+                    design = survey)
+regTermTest(I.genmod4, ~food_security:SEX)
+
+# URXEPB_LOG
+I.genmod5 <- svyglm(URXEPB_LOG ~ food_security * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIR_POLICY + cycleyr,
+                    design = survey)
+regTermTest(I.genmod5, ~food_security:SEX)
+
+# URXMPB_LOG
+I.genmod6 <- svyglm(URXMPB_LOG ~ food_security * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIR_POLICY + cycleyr,
+                    design = survey)
+regTermTest(I.genmod6, ~food_security:SEX)
+
+# URXPPB_LOG
+I.genmod7 <- svyglm(URXPPB_LOG ~ food_security * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIR_POLICY + cycleyr,
+                    design = survey)
+regTermTest(I.genmod7, ~food_security:SEX)
+
+```
+
+#####Strata estimates 
+```{r}
+# URXBPH_LOG
+I.genBmod1 <- svyglm(URXBPH_LOG ~ FOODSEC * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIR_POLICY + cycleyr,
+                     design = survey)
+
+# URXBP3_LOG
+I.genBmod2 <- svyglm(URXBP3_LOG ~ FOODSEC * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIR_POLICY + cycleyr,
+                     design = survey)
+
+# URXTRS_LOG
+I.genBmod3 <- svyglm(URXTRS_LOG ~ FOODSEC * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIR_POLICY + cycleyr,
+                     design = survey)
+
+# URXBUP_LOG
+I.genBmod4 <- svyglm(URXBUP_LOG ~ FOODSEC * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIR_POLICY + cycleyr,
+                     design = survey)
+
+# URXEPB_LOG
+I.genBmod5 <- svyglm(URXEPB_LOG ~ FOODSEC * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIR_POLICY + cycleyr,
+                     design = survey)
+
+# URXMPB_LOG
+I.genBmod6 <- svyglm(URXMPB_LOG ~ FOODSEC * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIR_POLICY + cycleyr,
+                     design = survey)
+
+# URXPPB_LOG
+I.genBmod7 <- svyglm(URXPPB_LOG ~ FOODSEC * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIR_POLICY + cycleyr,
+                     design = survey)
+```
+
+
+```{r}
+emmeans::emm_options(rg.limit = 30000)
+
+emms <- emmeans(I.genBmod1, ~ FOODSEC | SEX)
+contrast(emms, method = "revpairwise")
+```
+
+
+```{r}
+
+GENmodels_list<-list(I.genBmod1, I.genBmod2, I.genBmod3, I.genBmod4, I.genBmod5, I.genBmod6, I.genBmod7)
+GENmod_names<-c("BPA", "BP3", "TRS", "BUP", "EPB", "MPB", "PPB")
+
+emmeans::emm_options(rg.limit = 30000)
+
+results <- lapply(seq_along(GENmodels_list), function(i) {
+  model <- GENmodels_list[[i]]
+  mod_name <- GENmod_names[i]
+  
+  emms <- emmeans(model, ~ FOODSEC | SEX)
+  cont <- contrast(emms, method = "revpairwise")
+  cont_summary <- summary(cont, infer = TRUE)
+  
+  # Exponentiate contrasts
+  cont_summary$exp.estimate     <- exp(cont_summary$estimate)
+  cont_summary$exp.lower.CL     <- exp(cont_summary$lower.CL)
+  cont_summary$exp.upper.CL     <- exp(cont_summary$upper.CL)
+  
+  cont_summary$model <- mod_name
+  cont_summary
+})
+
+GENall_results <- do.call(rbind, results)
+write.csv(GENall_results, "Results/GENstrata_results2.csv", row.names=FALSE)
+```
+
+#PLOTS
+###Model 3 adjusted signifcant findings
+```{r}
+
+RM_GGPlots <-read.csv("Results/RM_GGPlots2.csv")
+names(RM_GGPlots) <- c("Model", "FOODSEC", "Food Security", "% Difference", "% Lower", "% Higher", "SE", "P_value")
+brewer_pal <- brewer.pal(3, "Set1")
+range(RM_GGPlots$`% Lower`, na.rm=TRUE)
+range(RM_GGPlots$`% Higher`, na.rm=TRUE)
+
+
+
+# Helper theme chunk to reuse in each plot
+custom_theme <-
+  theme(
+    plot.title = element_text(hjust = 0.5, face="bold", size=18),
+    panel.grid.major.y = element_line(color = "grey90"),          
+    panel.grid.minor = element_blank(),                          
+    axis.line = element_line(color = "black"),     
+    plot.margin = margin(t = 10, r = 10, b = 25, l = 10)  # 
+  )
+
+# BPA
+BPA_adj3 <- RM_GGPlots %>%
+  filter(Model == "BPA", !is.na(`% Difference`), !is.na(`% Lower`), !is.na(`% Higher`)) %>%
+  ggplot(aes(x = factor(`Food Security`, levels = c("High (Ref)", "Marginal", "Low", "Very Low")), y = `% Difference`)) +
+  geom_point(size = 3, color = brewer_pal[1], alpha = 0.7) +
+  geom_errorbar(aes(ymin = `% Lower`, ymax = `% Higher`), width = 0.3, color = brewer_pal[1]) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +  
+   labs(
+    title = "BPA",
+    x = "Food Security Levels",
+    y = "% Difference in Concentrations") +
+  labs(title = "BPA", x = "Food Security Levels", y = "% Difference in Concentrations") +
+  custom_theme +
+  scale_x_discrete(drop = FALSE)  + 
+  scale_y_continuous(limits = c(-42, 25))
+
+
+# BP3
+BP3_adj3 <- RM_GGPlots %>%
+  filter(Model == "BP3", !is.na(`% Difference`), !is.na(`% Lower`), !is.na(`% Higher`)) %>%
+      ggplot(aes(x = factor(`Food Security`, levels = c("High (Ref)", "Marginal", "Low", "Very Low")), y = `% Difference`)) +
+  geom_point(size = 3, color = brewer_pal[1], alpha = 0.7) +
+  geom_errorbar(aes(ymin = `% Lower`, ymax = `% Higher`), width = 0.2, color = brewer_pal[1]) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +  
+  labs(title = "BP3", x = "Food Security Levels", y = "% Difference in Concentrations") +
+  custom_theme +
+  scale_x_discrete(drop = FALSE)+   scale_y_continuous(limits = c(-42, 25))
+
+
+# TRS
+TRS_adj3 <- ggplot(RM_GGPlots %>% filter(Model == "TRS", !is.na(`% Difference`), !is.na(`% Lower`), !is.na(`% Higher`)),
+  aes(x = factor(`Food Security`, levels = c("High (Ref)", "Marginal", "Low", "Very Low")), y = `% Difference`)
+) +
+  geom_point(size = 3, color = brewer_pal[1], alpha = 0.7) +
+  geom_errorbar(aes(ymin = `% Lower`, ymax = `% Higher`), width = 0.2, color = brewer_pal[1]) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +  
+  labs(title = "TRS", x = "Food Security Levels", y = "% Difference in Concentrations") +
+  custom_theme +
+  scale_x_discrete(drop = FALSE)+   
+  scale_y_continuous(limits = c(-42, 25))
+
+
+# BUP
+BUP_adj3 <- RM_GGPlots %>%
+  filter(Model == "BUP", !is.na(`% Difference`), !is.na(`% Lower`), !is.na(`% Higher`)) %>%
+  ggplot(aes(x = factor(`Food Security`, levels = c("High (Ref)", "Marginal", "Low", "Very Low")), y = `% Difference`)) +
+  geom_point(size = 3, color = brewer_pal[1], alpha = 0.7) +
+  geom_errorbar(aes(ymin = `% Lower`, ymax = `% Higher`), width = 0.2, color = brewer_pal[1]) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +  
+  labs(title = "BUP", x = "Food Security Levels", y = "% Difference in Concentrations") +
+  custom_theme +
+  scale_x_discrete(drop = FALSE)+ 
+  scale_y_continuous(limits = c(-42, 25))
+
+
+# EPB
+EPB_adj3 <- ggplot(RM_GGPlots %>% filter(Model == "EPB", !is.na(`% Difference`), !is.na(`% Lower`), !is.na(`% Higher`)),
+  aes(x = factor(`Food Security`, levels = c("High (Ref)", "Marginal", "Low", "Very Low")), y = `% Difference`)
+) +
+  geom_point(size = 3, color = brewer_pal[1], alpha = 0.7) +
+  geom_errorbar(aes(ymin = `% Lower`, ymax = `% Higher`), width = 0.2, color = brewer_pal[1]) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +  
+  labs(title = "EPB", x = "Food Security Levels", y = "% Difference in Concentrations") +
+  custom_theme +
+  scale_x_discrete(drop = FALSE)+ 
+    scale_y_continuous(limits = c(-42, 25))
+
+
+# MPB
+MPB_adj3 <- ggplot(RM_GGPlots %>% filter(Model == "MPB", !is.na(`% Difference`), !is.na(`% Lower`), !is.na(`% Higher`)),
+  aes(x = factor(`Food Security`, levels = c("High (Ref)", "Marginal", "Low", "Very Low")), y = `% Difference`)
+) +
+  geom_point(size = 3, color = brewer_pal[1], alpha = 0.7) +
+  geom_errorbar(aes(ymin = `% Lower`, ymax = `% Higher`), width = 0.2, color = brewer_pal[1]) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +  
+  labs(title = "MPB", x = "Food Security Levels", y = "% Difference in Concentrations") +
+  custom_theme +
+  scale_x_discrete(drop = FALSE)+ 
+    scale_y_continuous(limits = c(-42, 25))
+
+
+#PPB
+PPB_adj3 <- RM_GGPlots %>%
+  filter(Model == "PPB", !is.na(`% Difference`), !is.na(`% Lower`), !is.na(`% Higher`)) %>%
+ ggplot(aes(x = factor(`Food Security`, levels = c("High (Ref)", "Marginal", "Low", "Very Low")), y = `% Difference`)) +
+  geom_point(size = 3, color = brewer_pal[1], alpha = 0.7) +
+  geom_errorbar(aes(ymin = `% Lower`, ymax = `% Higher`), width = 0.2, color = brewer_pal[1]) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +  
+  labs(title = "PPB", x = "Food Security Levels", y = "% Difference in Concentrations") +
+  custom_theme +
+  scale_x_discrete(drop = FALSE)+ 
+    scale_y_continuous(limits = c(-42, 25))
+
+```
+
+
+```{r}
+
+figure1<- ggarrange(
+  BPA_adj3 + theme(legend.position="none"), 
+  BP3_adj3 + theme(legend.position="none"), 
+  TRS_adj3 + theme(legend.position="none"),
+  BUP_adj3 + theme(legend.position="none"), 
+  EPB_adj3 + theme(legend.position="none"), 
+  MPB_adj3 + theme(legend.position="none"), 
+  PPB_adj3 , # Leave legend ON only here
+  ncol = 4, nrow = 2,
+  labels = c("A", "B", "C", "D", "E", "F", "G"),
+  common.legend = TRUE, # Should propagate the legend from one plot
+  legend = "bottom"
+)
+
+figure1
+
+```
+
+
+## Stratified by gender plots
+
+```{r}
+GENstrata<-read.csv("Results/GENstrata2.csv")
+brewer_pal <- brewer.pal(3, "Set1")
+
+range(GENstrata$`X.Lower`, na.rm=TRUE) #65
+range(GENstrata$`X.Higher`, na.rm=TRUE) #60
+
+
+
+#create vector with race/ethnicity labels
+sex_labels<- c("Female", "Male")
+sex_colors <- c("Female" = brewer_pal[1], "Male" = brewer_pal[2])
+names(sex_colors)<-sex_labels
+sex_shapes <- c("Female" = 16, "Male" = 17) # Circle, triangle
+names(sex_shapes)<-sex_labels
+
+
+
+# MEP
+BPA_adjEMM <- ggplot(
+  data = GENstrata %>%
+    filter(model == "BPA", 
+           !is.na(X.Difference), 
+           !is.na(X.Lower),
+           !is.na(X.Higher)),
+  aes(x = factor(FOODSEC, levels = c("1", "2", "3", "4")),
+      y = X.Difference,
+      color = SEX,
+      shape = SEX)
+) +
+  geom_point(position = position_dodge(width = 0.4), size = 2.5, alpha = 0.7) +
+  geom_errorbar(aes(ymin = X.Lower, ymax = X.Higher), 
+                position = position_dodge(width = 0.4), width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +  
+   labs(
+    title = "BPA",
+    x = "Food Security Levels",
+    y = "% Difference in Concentrations", 
+    color = "Sex", # title for color legend 
+    shape = "Sex" # title for shape legend
+  ) +
+  scale_color_manual(values = sex_colors, breaks = sex_labels) +
+  scale_shape_manual(values = sex_shapes, breaks = sex_labels) +
+  scale_x_discrete(drop = FALSE, 
+                   labels = c("1"= "High (Ref)", "2"="Marginal", "3"="Low", "4"="Very Low")) +
+    scale_y_continuous(limits = c(-65, 60))+
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 18), 
+     panel.grid.major.y = element_line(color = "grey90"),          
+    panel.grid.minor = element_blank(),                          
+    axis.line = element_line(color = "black"),                       
+    legend.position = "bottom",                                      
+    legend.title = element_text(size = 15, face = "bold"),           
+    legend.text = element_text(size = 14),                           
+    legend.box = "horizontal",                                      
+    legend.key.size = unit(1.5, "lines"),                            
+    strip.text = element_text(face = "bold", size = 16)             
+  ) +
+  guides(
+    color = guide_legend(title.position = "left", nrow = 1, byrow = TRUE),
+    shape = guide_legend(title.position = "left", nrow = 1, byrow = TRUE)
+  )
+
+BPA_adjEMM
+
+# BP3
+BP3_adjEMM <- ggplot(
+  data = GENstrata %>%
+    filter(model == "BP3", 
+           !is.na(X.Difference), 
+           !is.na(X.Lower),
+           !is.na(X.Higher)),
+  aes(x = factor(FOODSEC, levels = c("1", "2", "3", "4")),
+      y = X.Difference,
+      color = SEX,
+      shape = SEX)
+) +
+  geom_point(position = position_dodge(width = 0.4), size = 2.5, alpha = 0.7) +
+  geom_errorbar(aes(ymin = X.Lower, ymax = X.Higher), 
+                position = position_dodge(width = 0.4), width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +  
+   labs(
+    title = "BP3",
+    x = "Food Security Levels",
+    y = "% Difference in Concentrations", 
+    color = "Sex", # title for color legend 
+    shape = "Sex" # title for shape legend
+  ) +
+  scale_color_manual(values = sex_colors, breaks = sex_labels) +
+  scale_shape_manual(values = sex_shapes, breaks = sex_labels) +
+  scale_x_discrete(drop = FALSE, 
+                   labels = c("1"= "High (Ref)", "2"="Marginal", "3"="Low", "4"="Very Low")) +
+    scale_y_continuous(limits = c(-65, 60))+
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 18), 
+     panel.grid.major.y = element_line(color = "grey90"),          
+    panel.grid.minor = element_blank(),                          
+    axis.line = element_line(color = "black"),                       
+    legend.position = "bottom",                                      
+    legend.title = element_text(size = 15, face = "bold"),           
+    legend.text = element_text(size = 14),                           
+    legend.box = "horizontal",                                      
+    legend.key.size = unit(1.5, "lines"),                            
+    strip.text = element_text(face = "bold", size = 16)             
+  ) +
+  guides(
+    color = guide_legend(title.position = "left", nrow = 1, byrow = TRUE),
+    shape = guide_legend(title.position = "left", nrow = 1, byrow = TRUE)
+  )
+
+BP3_adjEMM
+
+# TRS
+TRS_adjEMM <- ggplot(
+  data = GENstrata %>%
+    filter(model == "TRS", 
+           !is.na(X.Difference), 
+           !is.na(X.Lower),
+           !is.na(X.Higher)),
+  aes(x = factor(FOODSEC, levels = c("1", "2", "3", "4")),
+      y = X.Difference,
+      color = SEX,
+      shape = SEX)
+) +
+  geom_point(position = position_dodge(width = 0.4), size = 2.5, alpha = 0.7) +
+  geom_errorbar(aes(ymin = X.Lower, ymax = X.Higher), 
+                position = position_dodge(width = 0.4), width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +  
+   labs(
+    title = "TRS",
+    x = "Food Security Levels",
+    y = "% Difference in Concentrations", 
+    color = "Sex", # title for color legend 
+    shape = "Sex" # title for shape legend
+  ) +
+  scale_color_manual(values = sex_colors, breaks = sex_labels) +
+  scale_shape_manual(values = sex_shapes, breaks = sex_labels) +
+  scale_x_discrete(drop = FALSE, 
+                   labels = c("1"= "High (Ref)", "2"="Marginal", "3"="Low", "4"="Very Low"))  +
+    scale_y_continuous(limits = c(-65, 60))+
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 18), 
+     panel.grid.major.y = element_line(color = "grey90"),          
+    panel.grid.minor = element_blank(),                          
+    axis.line = element_line(color = "black"),                       
+    legend.position = "bottom",                                      
+    legend.title = element_text(size = 15, face = "bold"),           
+    legend.text = element_text(size = 14),                           
+    legend.box = "horizontal",                                      
+    legend.key.size = unit(1.5, "lines"),                            
+    strip.text = element_text(face = "bold", size = 16)             
+  ) +
+  guides(
+    color = guide_legend(title.position = "left", nrow = 1, byrow = TRUE),
+    shape = guide_legend(title.position = "left", nrow = 1, byrow = TRUE)
+  )
+
+TRS_adjEMM
+
+# BUP
+BUP_adjEMM<- ggplot(
+  data = GENstrata %>%
+    filter(model == "BUP", 
+           !is.na(X.Difference), 
+           !is.na(X.Lower),
+           !is.na(X.Higher)),
+  aes(x = factor(FOODSEC, levels = c("1", "2", "3", "4")),
+      y = X.Difference,
+      color = SEX,
+      shape = SEX)
+) +
+  geom_point(position = position_dodge(width = 0.4), size = 2.5, alpha = 0.7) +
+  geom_errorbar(aes(ymin = X.Lower, ymax = X.Higher), 
+                position = position_dodge(width = 0.4), width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +  
+   labs(
+    title = "BUP",
+    x = "Food Security Levels",
+    y = "% Difference in Concentrations", 
+    color = "Sex", # title for color legend 
+    shape = "Sex" # title for shape legend
+  ) +
+  scale_color_manual(values = sex_colors, breaks = sex_labels) +
+  scale_shape_manual(values = sex_shapes, breaks = sex_labels) +
+  scale_x_discrete(drop = FALSE, 
+                   labels = c("1"= "High (Ref)", "2"="Marginal", "3"="Low", "4"="Very Low")) +
+    scale_y_continuous(limits = c(-65, 60))+
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 18), 
+     panel.grid.major.y = element_line(color = "grey90"),          
+    panel.grid.minor = element_blank(),                          
+    axis.line = element_line(color = "black"),                       
+    legend.position = "bottom",                                      
+    legend.title = element_text(size = 15, face = "bold"),           
+    legend.text = element_text(size = 14),                           
+    legend.box = "horizontal",                                      
+    legend.key.size = unit(1.5, "lines"),                            
+    strip.text = element_text(face = "bold", size = 16)             
+  ) +
+  guides(
+    color = guide_legend(title.position = "left", nrow = 1, byrow = TRUE),
+    shape = guide_legend(title.position = "left", nrow = 1, byrow = TRUE)
+  )
+
+BUP_adjEMM
+
+# EPB
+
+EPB_adjEMM <- ggplot(
+  data = GENstrata %>%
+    filter(model == "EPB", 
+           !is.na(X.Difference), 
+           !is.na(X.Lower),
+           !is.na(X.Higher)),
+  aes(x = factor(FOODSEC, levels = c("1", "2", "3", "4")),
+      y = X.Difference,
+      color = SEX,
+      shape = SEX)
+) +
+  geom_point(position = position_dodge(width = 0.4), size = 2.5, alpha = 0.7) +
+  geom_errorbar(aes(ymin = X.Lower, ymax = X.Higher), 
+                position = position_dodge(width = 0.4), width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +  
+   labs(
+    title = "EPB",
+    x = "Food Security Levels",
+    y = "% Difference in Concentrations", 
+    color = "Sex", # title for color legend 
+    shape = "Sex" # title for shape legend
+  ) +
+  scale_color_manual(values = sex_colors, breaks = sex_labels) +
+  scale_shape_manual(values = sex_shapes, breaks = sex_labels) +
+  scale_x_discrete(drop = FALSE, 
+                   labels = c("1"= "High (Ref)", "2"="Marginal", "3"="Low", "4"="Very Low"))  +
+    scale_y_continuous(limits = c(-65, 60))+
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 18), 
+     panel.grid.major.y = element_line(color = "grey90"),          
+    panel.grid.minor = element_blank(),                          
+    axis.line = element_line(color = "black"),                       
+    legend.position = "bottom",                                      
+    legend.title = element_text(size = 15, face = "bold"),           
+    legend.text = element_text(size = 14),                           
+    legend.box = "horizontal",                                      
+    legend.key.size = unit(1.5, "lines"),                            
+    strip.text = element_text(face = "bold", size = 16)             
+  ) +
+  guides(
+    color = guide_legend(title.position = "left", nrow = 1, byrow = TRUE),
+    shape = guide_legend(title.position = "left", nrow = 1, byrow = TRUE)
+  )
+        
+
+
+# MPB
+
+MPB_adjEMM <- ggplot(
+  data = GENstrata %>%
+    filter(model == "MPB", 
+           !is.na(X.Difference), 
+           !is.na(X.Lower),
+           !is.na(X.Higher)),
+  aes(x = factor(FOODSEC, levels = c("1", "2", "3", "4")),
+      y = X.Difference,
+      color = SEX,
+      shape = SEX)
+) +
+  geom_point(position = position_dodge(width = 0.4), size = 2.5, alpha = 0.7) +
+  geom_errorbar(aes(ymin = X.Lower, ymax = X.Higher), 
+                position = position_dodge(width = 0.4), width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +  
+   labs(
+    title = "MPB",
+    x = "Food Security Levels",
+    y = "% Difference in Concentrations", 
+    color = "Sex", # title for color legend 
+    shape = "Sex" # title for shape legend
+  ) +
+  scale_color_manual(values = sex_colors, breaks = sex_labels) +
+  scale_shape_manual(values = sex_shapes, breaks = sex_labels) +
+  scale_x_discrete(drop = FALSE, 
+                   labels = c("1"= "High (Ref)", "2"="Marginal", "3"="Low", "4"="Very Low"))  +
+    scale_y_continuous(limits = c(-65, 60))+
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 18), 
+     panel.grid.major.y = element_line(color = "grey90"),          
+    panel.grid.minor = element_blank(),                          
+    axis.line = element_line(color = "black"),                       
+    legend.position = "bottom",                                      
+    legend.title = element_text(size = 15, face = "bold"),           
+    legend.text = element_text(size = 14),                           
+    legend.box = "horizontal",                                      
+    legend.key.size = unit(1.5, "lines"),                            
+    strip.text = element_text(face = "bold", size = 16)             
+  ) +
+  guides(
+    color = guide_legend(title.position = "left", nrow = 1, byrow = TRUE),
+    shape = guide_legend(title.position = "left", nrow = 1, byrow = TRUE)
+  )
+
+# PPB
+PPB_adjEMM <- ggplot(
+  data = GENstrata %>%
+    filter(model == "PPB", 
+           !is.na(X.Difference), 
+           !is.na(X.Lower),
+           !is.na(X.Higher)),
+  aes(x = factor(FOODSEC, levels = c("1", "2", "3", "4")),
+      y = X.Difference,
+      color = SEX,
+      shape = SEX)
+) +
+  geom_point(position = position_dodge(width = 0.4), size = 2.5, alpha = 0.7) +
+  geom_errorbar(aes(ymin = X.Lower, ymax = X.Higher), 
+                position = position_dodge(width = 0.4), width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +  
+   labs(
+    title = "PPB",
+    x = "Food Security Levels",
+    y = "% Difference in Concentrations", 
+    color = "Sex", # title for color legend 
+    shape = "Sex" # title for shape legend
+  ) +
+  scale_color_manual(values = sex_colors, breaks = sex_labels) +
+  scale_shape_manual(values = sex_shapes, breaks = sex_labels) +
+  scale_x_discrete(drop = FALSE, 
+                  labels = c("1"= "High (Ref)", "2"="Marginal", "3"="Low", "4"="Very Low")) +
+    scale_y_continuous(limits = c(-65, 60))+
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 18), 
+     panel.grid.major.y = element_line(color = "grey90"),          
+    panel.grid.minor = element_blank(),                          
+    axis.line = element_line(color = "black"),                       
+    legend.position = "bottom",                                      
+    legend.title = element_text(size = 15, face = "bold"),           
+    legend.text = element_text(size = 14),                           
+    legend.box = "horizontal",                                      
+    legend.key.size = unit(1.5, "lines"),                            
+    strip.text = element_text(face = "bold", size = 16)             
+  ) +
+  guides(
+    color = guide_legend(title.position = "left", nrow = 1, byrow = TRUE),
+    shape = guide_legend(title.position = "left", nrow = 1, byrow = TRUE)
+  )
+PPB_adjEMM
+
+ggexport(figure1, filename = "Results/figure1.pdf")
+
+```
+
+
+```{r}
+
+# 
+# BPA_adjEMM <- BPA_adjEMM +
+#   annotate("text", 
+#            x = 2.5, y = 62,
+#            label = bquote(P[interaction] == .(formatC(0.08, digits=2, format="f"))),
+#            size=5, hjust=0.5)
+# BP3_adjEMM <- BP3_adjEMM +
+#   annotate("text", 
+#            x = 2.5, y = 62,
+#            label = bquote(P[interaction] == .(formatC(0.08, digits=2, format="f"))),
+#            size=5, hjust=0.5)
+# 
+# 
+# TRS_adjEMM <- TRS_adjEMM +
+#   annotate("text", 
+#            x = 2.5, y = 62,
+#           label = bquote(P[interaction] == .(formatC(0.02, digits=2, format="f"))),
+#            size=5, hjust=0.5)
+# 
+# BUP_adjEMM <- BUP_adjEMM +
+#   annotate("text", 
+#            x = 2.5, y = 63,
+#            label = bquote(P[interaction] == .(formatC(0.0001, digits=4, format="f"))),
+#            size=5, hjust=0.5)
+# 
+# 
+# 
+# EPB_adjEMM <- EPB_adjEMM +
+#   annotate("text", 
+#            x = 2.5, y = 62, 
+#           label = bquote(P[interaction] == .(formatC(0.0002, digits=4, format="f"))),
+#            size=5, hjust=0.5)
+# 
+# MPB_adjEMM <- MPB_adjEMM +
+#   annotate("text", 
+#            x = 2.5, y = 62, 
+#          label = bquote(P[interaction] == .(formatC(0.30, digits=2, format="f"))),
+#            size=5, hjust=0.5)
+# 
+# PPB_adjEMM <- PPB_adjEMM +
+#   annotate("text", 
+#            x = 2.5, y = 62, 
+#            label = bquote(P[interaction] == .(formatC(0.01, digits=2, format="f"))),
+#            size=5, hjust=0.5)
+
+figure2<- ggarrange(
+  BPA_adjEMM + theme(legend.position="none"),
+  BP3_adjEMM + theme(legend.position="none"), 
+  TRS_adjEMM + theme(legend.position="none"), 
+  BUP_adjEMM + theme(legend.position="none"), 
+  EPB_adjEMM + theme(legend.position="none"), 
+  MPB_adjEMM + theme(legend.position="none"), 
+  PPB_adjEMM,  # Leave legend ON only here
+  ncol = 4, nrow = 2,
+  labels = c("A", "B", "C", "D", "E", "G"),
+  common.legend = TRUE, # Should propagate the legend from one plot
+  legend = "bottom"
+)
+
+figure2
+
+ggexport(figure2, filename = "Results/figure2.pdf")
+```
+
+
+
+
+
+
+
