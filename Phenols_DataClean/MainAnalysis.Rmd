@@ -693,7 +693,8 @@ write.csv(REall_results, "Results/REstrata_results.csv", row.names=FALSE)
 ###Model 3 adjusted signifcant findings
 ```{r}
 
-RM_GGPlots <-read.csv("Results/RM_GGPlots2.csv")
+RM_GGPlots <-read.csv("Results/RM_GGPlots.csv")
+names(RM_GGPlots)
 names(RM_GGPlots) <- c("Model", "FOODSEC", "Food Security", "% Difference", "% Lower", "% Higher", "SE", "P_value")
 brewer_pal <- brewer.pal(3, "Set1")
 range(RM_GGPlots$`% Lower`, na.rm=TRUE)
