@@ -23,7 +23,6 @@ library(tidyr)
 library(dplyr)
 library(expss)
 library(broom)
-library(plyr)
 library(gtsummary)
 library(readxl)
 library(emmeans)
@@ -284,6 +283,31 @@ sum(!is.na(FullData_allcyclesFINAL2$URDEPBLC))
 sum(!is.na(FullData_allcyclesFINAL2$URDMPBLC))
 sum(!is.na(FullData_allcyclesFINAL2$URDPPBLC))
 ```
+
+#CORRELATION PLOT 
+```{r}
+
+FullData_allcyclesFINAL2<-readRDS("FullData_allcyclesFINAL2.rds")
+
+names(FullData_allcyclesFINAL2)
+#LOG
+vars_LOG<-FullData_allcyclesFINAL2%>% 
+  select(c(URXBPH_LOG, URXBP3_LOG, URXTRS_LOG, URXEPB_LOG, URXMPB_LOG, URXPPB_LOG))
+
+new_names <- c("Bisphenol A", "Benzophenone-3", "Triclosan", "Ethyl Paraben", "Methyl Paraben", "Propyl Paraben")
+
+cor_mat_LOG<-cor(vars_LOG, use = "pairwise.complete.obs", method="spearman")
+
+colnames(cor_mat_LOG) <- new_names
+rownames(cor_mat_LOG) <- new_names
+
+corrplot(cor_mat_LOG, type="full", order= "original", col = brewer.pal(n=8, name= "RdYlBu"), tl.srt = 45, addCoef.col = "black", number.cex = 0.7)
+
+```
+
+
+
+
 
 
 # MAIN ANALYSIS
@@ -695,7 +719,7 @@ write.csv(REall_results, "Results/REstrata_results.csv", row.names=FALSE)
 
 RM_GGPlots <-read.csv("Results/RM_GGPlots.csv")
 names(RM_GGPlots)
-names(RM_GGPlots) <- c("Model", "FOODSEC", "Food Security", "% Difference", "% Lower", "% Higher", "SE", "P_value")
+names(RM_GGPlots) <- c("Model", "FOODSEC", "Food Security", "% Difference", "% Lower", "% Higher",  "P_value")
 brewer_pal <- brewer.pal(3, "Set1")
 range(RM_GGPlots$`% Lower`, na.rm=TRUE)
 range(RM_GGPlots$`% Higher`, na.rm=TRUE)
@@ -814,12 +838,12 @@ figure1<- ggarrange(
   BPA_adj3 + theme(legend.position="none"), 
   BP3_adj3 + theme(legend.position="none"), 
   TRS_adj3 + theme(legend.position="none"),
-  BUP_adj3 + theme(legend.position="none"), 
+  #BUP_adj3 + theme(legend.position="none"), 
   EPB_adj3 + theme(legend.position="none"), 
   MPB_adj3 + theme(legend.position="none"), 
   PPB_adj3 , # Leave legend ON only here
-  ncol = 4, nrow = 2,
-  labels = c("A", "B", "C", "D", "E", "F", "G"),
+  ncol = 3, nrow = 3,
+  labels = c("A", "B", "C", "D", "E", "F"),
   common.legend = TRUE, # Should propagate the legend from one plot
   legend = "bottom"
 )
@@ -1064,7 +1088,7 @@ EPB_adjEMM <- ggplot(
   scale_color_manual(values = sex_colors, breaks = sex_labels) +
   scale_shape_manual(values = sex_shapes, breaks = sex_labels) +
   scale_x_discrete(drop = FALSE, 
-                   labels = c("1"= "High (Ref)", "2"="Marginal", "3"="Low", "4"="Very Low"))  +
+                   labels = c("1"= "High (Ref)", "2"="Marginal", "3"="Low", "4"="Very Low")) +
     scale_y_continuous(limits = c(-65, 60))+
   theme(
     plot.title = element_text(hjust = 0.5, face = "bold", size = 18), 
@@ -1082,8 +1106,8 @@ EPB_adjEMM <- ggplot(
     color = guide_legend(title.position = "left", nrow = 1, byrow = TRUE),
     shape = guide_legend(title.position = "left", nrow = 1, byrow = TRUE)
   )
-        
 
+EPB_adjEMM
 
 # MPB
 
@@ -1184,60 +1208,87 @@ PPB_adjEMM
 ```{r}
 
 
-BPA_adjEMM <- BPA_adjEMM +
-  annotate("text",
-           x = 2.5, y = 55,
-           label = bquote(P[interaction] == .(formatC(0.02, digits=2, format="f"))),
-           size=5, hjust=0.5)
-BP3_adjEMM <- BP3_adjEMM +
-  annotate("text",
-           x = 2.5, y = 55,
-           label = bquote(P[interaction] == .(formatC(0.34, digits=2, format="f"))),
-           size=5, hjust=0.5)
 
+# BUP_adjEMM <- BUP_adjEMM +
+#   annotate("text",
+#            x = 2.5, y = 55,
+#            label = bquote(P[interaction] == .(formatC(0.0001, digits=4, format="f"))),
+#            size=5, hjust=0.5)
+
+
+p_int_BPA  <- 0.02
+p_int_BP3  <- 0.34
+p_int_TRS  <- 0.88
+p_int_EPB  <- 0.004
+p_int_MPB  <- 0.001
+p_int_PPB  <- 0.003
+
+BPA_adjEMM <- BPA_adjEMM +
+  annotate(
+    "text",
+    x = 2.5, y = 55,
+    label = sprintf("P[interaction]==%.2f", p_int_BPA),
+    parse  = TRUE,
+    size = 5, hjust = 0.5
+  )
+
+BP3_adjEMM <- BP3_adjEMM +
+  annotate(
+    "text",
+    x = 2.5, y = 55,
+    label = sprintf("P[interaction]==%.2f", p_int_BP3),
+    parse  = TRUE,
+    size = 5, hjust = 0.5
+  )
 
 TRS_adjEMM <- TRS_adjEMM +
-  annotate("text",
-           x = 2.5, y = 55,
-          label = bquote(P[interaction] == .(formatC(0.88, digits=2, format="f"))),
-           size=5, hjust=0.5)
-
-BUP_adjEMM <- BUP_adjEMM +
-  annotate("text",
-           x = 2.5, y = 55,
-           label = bquote(P[interaction] == .(formatC(0.0001, digits=4, format="f"))),
-           size=5, hjust=0.5)
-
-
+  annotate(
+    "text",
+    x = 2.5, y = 55,
+    label = sprintf("P[interaction]==%.2f", p_int_TRS),
+    parse  = TRUE,
+    size = 5, hjust = 0.5
+  )
 
 EPB_adjEMM <- EPB_adjEMM +
-  annotate("text",
-           x = 2.5, y = 55,
-          label = bquote(P[interaction] == .(formatC(0.004, digits=3, format="f"))),
-           size=5, hjust=0.5)
+  annotate(
+    "text",
+    x = 2.5, y = 55,
+    label = sprintf("P[interaction]==%.3f", p_int_EPB),
+    parse  = TRUE,
+    size = 5, hjust = 0.5
+  )
 
 MPB_adjEMM <- MPB_adjEMM +
-  annotate("text",
-           x = 2.5, y = 55,
-         label = bquote(P[interaction] == .(formatC(0.001, digits=3, format="f"))),
-           size=5, hjust=0.5)
+  annotate(
+    "text",
+    x = 2.5, y = 55,
+    label = sprintf("P[interaction]==%.3f", p_int_MPB),
+    parse  = TRUE,
+    size = 5, hjust = 0.5
+  )
 
 PPB_adjEMM <- PPB_adjEMM +
-  annotate("text",
-           x = 2.5, y = 55,
-           label = bquote(P[interaction] == .(formatC(0.003, digits=3, format="f"))),
-           size=5, hjust=0.5)
+  annotate(
+    "text",
+    x = 2.5, y = 55,
+    label = sprintf("P[interaction]==%.3f", p_int_PPB),
+    parse  = TRUE,
+    size = 5, hjust = 0.5
+  )
+
+
+PPB_adjEMM
 
 figure2<- ggarrange(
   BPA_adjEMM + theme(legend.position="none"),
   BP3_adjEMM + theme(legend.position="none"), 
   TRS_adjEMM + theme(legend.position="none"), 
-  BUP_adjEMM + theme(legend.position="none"), 
   EPB_adjEMM + theme(legend.position="none"), 
   MPB_adjEMM + theme(legend.position="none"), 
   PPB_adjEMM,  # Leave legend ON only here
-  ncol = 4, nrow = 2,
-  labels = c("A", "B", "C", "D", "E", "G"),
+  ncol = 3, nrow = 3,
+  labels = c("A", "B", "C", "D", "E", "F"),
   common.legend = TRUE, # Should propagate the legend from one plot
   legend = "bottom"
 )
@@ -1246,7 +1297,6 @@ figure2
 
 ggexport(figure2, filename = "Results/figure2.pdf")
 ```
-
 
 
 ##Race Stratified
@@ -1640,48 +1690,85 @@ PPB_adjREMM<-ggplot(
 
 ```{r}
 
-BPA_adjREMM <-BPA_adjREMM +
-annotate("text",
-           x = 2.5, y = 250,
-           label = bquote(P[interaction] == .(formatC(0.11, digits=2, format="f"))),
-           size=4, hjust=0.5)
+# BUP_adjREMM <- BUP_adjREMM +
+#   annotate("text",
+#            x = 2.5, y = 250,
+#           label = bquote(P[interaction] == .(formatC(0.003, digits=3, format="f"))),
+#            size=4, hjust=0.5)
+
+# interaction p-values
+p_int_BPA_REMM <- 0.11
+p_int_BP3_REMM <- 0.06
+p_int_TRS_REMM <- 0.08
+p_int_BUP_REMM <- 0.003
+p_int_EPB_REMM <- 0.04
+p_int_MPB_REMM <- 0.006
+p_int_PPB_REMM <- 0.004
+
+
+
+BPA_adjREMM <- BPA_adjREMM +
+  annotate(
+    "text",
+    x = 2.5, y = 250,
+    label = sprintf("P[interaction]==%.2f", p_int_BPA_REMM),
+    parse  = TRUE,
+    size   = 4, hjust = 0.5
+  )
 
 BP3_adjREMM <- BP3_adjREMM +
-  annotate("text", 
-           x = 2.5, y = 250,
-          label = bquote(P[interaction] == .(formatC(0.06, digits=2, format="f"))),
-           size=4, hjust=0.5)
+  annotate(
+    "text",
+    x = 2.5, y = 250,
+    label = sprintf("P[interaction]==%.2f", p_int_BP3_REMM),
+    parse  = TRUE,
+    size   = 4, hjust = 0.5
+  )
 
-TRS_adjREMM<- TRS_adjREMM +
-  annotate("text", 
-           x = 2.5, y = 250,
-           label = bquote(P[interaction] == .(formatC(0.08, digits=2, format="f"))),
-           size=4, hjust=0.5)
-
+TRS_adjREMM <- TRS_adjREMM +
+  annotate(
+    "text",
+    x = 2.5, y = 250,
+    label = sprintf("P[interaction]==%.2f", p_int_TRS_REMM),
+    parse  = TRUE,
+    size   = 4, hjust = 0.5
+  )
 
 BUP_adjREMM <- BUP_adjREMM +
-  annotate("text",
-           x = 2.5, y = 250,
-          label = bquote(P[interaction] == .(formatC(0.003, digits=3, format="f"))),
-           size=4, hjust=0.5)
+  annotate(
+    "text",
+    x = 2.5, y = 250,
+    label = sprintf("P[interaction]==%.3f", p_int_BUP_REMM),
+    parse  = TRUE,
+    size   = 4, hjust = 0.5
+  )
 
 EPB_adjREMM <- EPB_adjREMM +
-  annotate("text",
-           x = 2.5, y = 250,
-         label = bquote(P[interaction] == .(formatC(0.04, digits=2, format="f"))),
-           size=4, hjust=0.5)
+  annotate(
+    "text",
+    x = 2.5, y = 250,
+    label = sprintf("P[interaction]==%.2f", p_int_EPB_REMM),
+    parse  = TRUE,
+    size   = 4, hjust = 0.5
+  )
 
 MPB_adjREMM <- MPB_adjREMM +
-  annotate("text", 
-           x = 2.5, y = 250, 
-           label = bquote(P[interaction] == .(formatC(0.006, digits=3, format="f"))),
-           size=4, hjust=0.5)
+  annotate(
+    "text",
+    x = 2.5, y = 250,
+    label = sprintf("P[interaction]==%.3f", p_int_MPB_REMM),
+    parse  = TRUE,
+    size   = 4, hjust = 0.5
+  )
 
 PPB_adjREMM <- PPB_adjREMM +
-  annotate("text",
-           x = 2.5, y = 250,
-          label = bquote(P[interaction] == .(formatC(0.004, digits=3, format="f"))),
-           size=4, hjust=0.5)
+  annotate(
+    "text",
+    x = 2.5, y = 250,
+    label = sprintf("P[interaction]==%.3f", p_int_PPB_REMM),
+    parse  = TRUE,
+    size   = 4, hjust = 0.5
+  )
 
 figure3a<- ggarrange(
   BPA_adjREMM + theme(legend.position="none"), 
@@ -1697,13 +1784,13 @@ figure3a<- ggarrange(
 figure3a
 
 figure3b<- ggarrange(
-  BUP_adjREMM + theme(legend.position="none"), 
+  #BUP_adjREMM + theme(legend.position="none"), 
   EPB_adjREMM + theme(legend.position="none"), 
   MPB_adjREMM + theme(legend.position="none"),
   PPB_adjREMM, 
 # Leave legend ON only here
   ncol = 2, nrow = 2,
-  labels = c("A", "B", "C", "D"),
+  labels = c("A", "B", "C"),
   common.legend = TRUE, # Should propagate the legend from one plot
   legend = "bottom"
 )
