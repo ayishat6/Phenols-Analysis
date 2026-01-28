@@ -64,9 +64,8 @@ exp_coeffs <- function(model) {
 
 #More Data Transformations
 ```{r, include=FALSE}
-FullData_allcyclesFINAL2<-read.csv("FullData_allcyclesFINAL2.csv")
 
-#FullData_allcyclesFINAL2<-readRDS("FullData_allcyclesFINAL2.rds")
+FullData_allcyclesFINAL2<-readRDS("FullData_allcyclesFINAL2.rds")
 
 #change units of creatinine (mg/dl)
 FullData_allcyclesFINAL2$URXUCR_final <- FullData_allcyclesFINAL2$URXUCR_final * 10000
@@ -118,6 +117,8 @@ log phenols
 ```{r}
 library(dplyr)
 
+
+
 FullData_allcyclesFINAL2 <- FullData_allcyclesFINAL2 %>%
   mutate(
     URXBPH_LOG = log(URXBPH),
@@ -128,6 +129,8 @@ FullData_allcyclesFINAL2 <- FullData_allcyclesFINAL2 %>%
     URXMPB_LOG = log(URXMPB),
     URXPPB_LOG = log(URXPPB)
   )
+
+saveRDS(FullData_allcyclesFINAL2, "FullData_allcyclesFINAL2.rds")
 ```
 
 
@@ -145,13 +148,18 @@ table(FullData_allcyclesFINAL2$SEX, useNA="ifany")
 table(FullData_allcyclesFINAL2$RACEETH, useNA="ifany")
 table(FullData_allcyclesFINAL2$AGEGROUP, useNA="ifany")
 table(FullData_allcyclesFINAL2$EDUCAT, useNA="ifany")
+summary(FullData_allcyclesFINAL2$SURVWEIGHT, useNA="ifany")
 
 
+saveRDS(FullData_allcyclesFINAL2, "FullData_allcyclesFINAL2.rds")
 
 ```
-MN confirmed none missing 
+
 
 ```{r}
+
+FullData_allcyclesFINAL2<-readRDS("FullData_allcyclesFINAL2.rds")
+
 survey <-svydesign(ids = ~SDMVPSU,
           strata = ~SDMVSTRA,
          weights = ~SURVWEIGHT,
@@ -489,6 +497,7 @@ survey <-svydesign(ids = ~SDMVPSU,
 
 summary(survey)
 
+summary(FullData_allcyclesFINAL2$SURVWEIGHT, useNA="ifany")
 
 
 ```

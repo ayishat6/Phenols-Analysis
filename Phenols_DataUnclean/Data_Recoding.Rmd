@@ -21,6 +21,8 @@ library(ggplot2) #creating data visualizations/plots
 #Load File
 ```{r}
 FullData_allcycles<-read.csv("~/Documents/Github/Phenols-Analysis/Phenols_DataUnclean/FullData_allcycles.csv")
+
+names(FullData_allcycles)
 ```
 Note to Ayishat: Initial Population: 16,349
 ##Food Security
@@ -166,12 +168,12 @@ sum(is.na(FullData_allcycles$URXUCR.y))#9685
 
 
 FullData_allcycles$URXUCR_final <- coalesce(
-  FullData_allcycles$URXUCR, 
-  FullData_allcycles$URXUCR.x, 
-  FullData_allcycles$URXUCR.y
+  as.numeric(FullData_allcycles$URXUCR),
+  as.numeric(FullData_allcycles$URXUCR.x),
+  as.numeric(FullData_allcycles$URXUCR.y)
 )
 
-summary(FullData_allcycles$URXUCR_final, useNA="ifany")
+summary(FullData_allcycles$URXUCR_final, useNA="ifany") #300 missing creatinine 
 
 ```
 
@@ -182,7 +184,7 @@ Marshae Note to Ayishat: Before we generate sample: prior to any missingness rem
 
 #generate sample (samplepopulation) from nonmissing in exposure/covariates
 FullData_allcycles<-FullData_allcycles %>%
-  mutate(SAMPLE= ifelse(is.na(EDUCAT)| is.na(PIRCAT) | is.na(SEX)| is.na(RACEETH) | is.na(AGEGROUP)| is.na(FOODSEC) | is.na(cycleyr),0,1))
+  mutate(SAMPLE= ifelse(is.na(EDUCAT)| is.na(PIRCAT) | is.na(SEX)| is.na(RACEETH) | is.na(AGEGROUP)| is.na(FOODSEC),0,1))
 
 sum(is.na(FullData_allcycles$EDUCAT) | 
     is.na(FullData_allcycles$PIRCAT) | 
@@ -296,17 +298,17 @@ summary(FullData_allcycles$URXPPB, na.rm = FALSE) #387 missing
 Note to Ayishat: low missingness in Phenols
 
 ```{r}
-FullData_allcycles <- FullData_allcycles %>%
-  mutate(SAMPLE2 = ifelse(SAMPLE == 1 &
-                          URDBPHLC != 1 &
-                          URDBP3LC != 1 &
-                          URDTRSLC != 1 &
-                          URDBUPLC != 1 &
-                          URDEPBLC != 1 &
-                          URDMPBLC != 1 &
-                          URDPPBLC != 1, 1, 0))
-
-table(FullData_allcycles$SAMPLE2) #2139 final sample size 
+# FullData_allcycles <- FullData_allcycles %>%
+#   mutate(SAMPLE2 = ifelse(SAMPLE == 1 &
+#                           URDBPHLC != 1 &
+#                           URDBP3LC != 1 &
+#                           URDTRSLC != 1 &
+#                           URDBUPLC != 1 &
+#                           URDEPBLC != 1 &
+#                           URDMPBLC != 1 &
+#                           URDPPBLC != 1, 1, 0))
+# 
+# table(FullData_allcycles$SAMPLE2) #2139 final sample size 
 
 
 FullData_allcycles2 <- FullData_allcycles %>%
@@ -317,10 +319,20 @@ FullData_allcycles2 <- FullData_allcycles %>%
                            URDBUPLC != 1 |
                            URDEPBLC != 1 |
                            URDMPBLC != 1 |
-                           URDPPBLC != 1), 1, 0))
+                           URDPPBLC != 1) & 
+                            !is.na(URXUCR_final), 1, 0))
 
 
-table(FullData_allcycles2$SAMPLE2) #10097 final sample size 
+table(FullData_allcycles2$SAMPLE2) #10094 final sample size, only 3 excluded missing creatinine
+
+idx <- !is.na(FullData_allcycles2$URXUCR_final)
+table(FullData_allcycles2$SAMPLE2[idx] == 1, useNA = "ifany") #75 missing ?
+
+# After you've created SAMPLE2
+FullData_allcycles2$SAMPLE2[is.na(FullData_allcycles2$SAMPLE2)] <- 0
+
+table(FullData_allcycles2$SAMPLE2, useNA = "ifany") #10094
+
 
 ```
 
@@ -402,21 +414,21 @@ The detection limits were constant for all of the analytes in the data set. Two 
 ####fulldataset
 ```{r}
 #change survey weights 
-FullData_allcycles <- FullData_allcycles %>%
-  mutate(SURVWEIGHT = case_when(
-    cycleyr >= 1 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
-    cycleyr >= 2 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
-    cycleyr >= 3 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
-    cycleyr >= 4 & !is.na(WTSA2YR) ~ WTSA2YR * (1 / 7),
-    cycleyr >= 5 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
-    cycleyr >= 6 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
-    TRUE ~ NA_real_
-  ))
-
-
-write_csv(FullData_allcycles, "~/Documents/Github/Phenols-Analysis/Phenols_DataClean/FullData_allcyclesFINAL.csv")
-
-saveRDS(FullData_allcycles, "~/Documents/Github/Phenols-Analysis/Phenols_DataClean/FullData_allcyclesFINAL.rds")
+# FullData_allcycles <- FullData_allcycles %>%
+#   mutate(SURVWEIGHT = case_when(
+#     cycleyr >= 1 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 6),
+#     cycleyr >= 2 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 6),
+#     cycleyr >= 3 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 6),
+#     cycleyr >= 4 & !is.na(WTSA2YR) ~ WTSA2YR * (1 / 6),
+#     cycleyr >= 5 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 6),
+#     cycleyr >= 6 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 6),
+#     TRUE ~ NA_real_
+#   ))
+# 
+# 
+# write_csv(FullData_allcycles, "~/Documents/Github/Phenols-Analysis/Phenols_DataClean/FullData_allcyclesFINAL.csv")
+# 
+# saveRDS(FullData_allcycles, "~/Documents/Github/Phenols-Analysis/Phenols_DataClean/FullData_allcyclesFINAL.rds")
 ```
 
 
@@ -428,15 +440,18 @@ saveRDS(FullData_allcycles, "~/Documents/Github/Phenols-Analysis/Phenols_DataCle
 #change survey weights 
 FullData_allcycles2 <- FullData_allcycles2 %>%
   mutate(SURVWEIGHT = case_when(
-    cycleyr >= 1 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
-    cycleyr >= 2 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
-    cycleyr >= 3 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
-    cycleyr >= 4 & !is.na(WTSA2YR) ~ WTSA2YR * (1 / 7),
-    cycleyr >= 5 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
-    cycleyr >= 6 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 7),
+    cycleyr >= 1 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 6),
+    cycleyr >= 2 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 6),
+    cycleyr >= 3 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 6),
+    cycleyr >= 4 & !is.na(WTSA2YR) ~ WTSA2YR * (1 / 6),
+    cycleyr >= 5 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 6),
+    cycleyr >= 6 & !is.na(WTSB2YR) ~ WTSB2YR * (1 / 6),
     TRUE ~ NA_real_
   ))
 
+
+with(FullData_allcycles2,
+     table(SAMPLE2 == 1, is.na(SURVWEIGHT), useNA = "ifany")) #no one in sample has missing 
 
 write_csv(FullData_allcycles2, "~/Documents/Github/Phenols-Analysis/Phenols_DataClean/FullData_allcyclesFINAL2.csv")
 
@@ -445,5 +460,4 @@ saveRDS(FullData_allcycles2, "~/Documents/Github/Phenols-Analysis/Phenols_DataCl
 
 
 
-```
 

@@ -23,7 +23,7 @@ library(readr)
 
 
 
-
+MN use WTSB2YR for 2005-2010
 ```{r}  
 #2005-2006
 #Fastingstatus
@@ -244,7 +244,7 @@ write.csv(dat4_07_08, "FullData_2009_2010.csv") #save csv file
 ```
 
 
-
+WTSA2YR
 ```{r}
 #2011-2012
 #Fastingstatus
@@ -316,7 +316,7 @@ FullData_2011_2012<-dat4_11_12
 write.csv(dat4_11_12, "FullData_2011_2012.csv") #save csv file
 
 ```
-
+ Use WTSB2YR
 ```{r}
 #2013-2014
 #Fastingstatus
@@ -392,7 +392,7 @@ write.csv(dat4_13_14, "FullData_2013_2014.csv") #save csv file
 
 ```
 
-
+WTSB2YR
 ```{r}
 
 #2015-2016
