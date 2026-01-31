@@ -128,17 +128,24 @@ table(FullData_allcycles$EDUCAT, useNA="ifany") #23 NA
 #poverty
 summary(FullData_allcycles$INDFMPIR, useNA="ifany") #1030 missing
 
-FullData_allcycles<-FullData_allcycles%>%
-  mutate(PIRCAT=case_when(
-    INDFMPIR<=0.99 ~1, 
-    INDFMPIR>=1 & INDFMPIR<2 ~2, 
-    INDFMPIR>=2 & INDFMPIR<3 ~3, 
-    INDFMPIR>=3 & INDFMPIR<5 ~4, 
-    INDFMPIR>=5 ~5, 
-    is.na(INDFMPIR)~NA_real_
-  ))
+FullData_allcycles <- FullData_allcycles %>%
+  mutate(
+    PIRCAT = case_when(
+      INDFMPIR < 1                 ~ 1,
+      INDFMPIR >= 1 & INDFMPIR < 2 ~ 2,
+      INDFMPIR >= 2 & INDFMPIR < 3 ~ 3,
+      INDFMPIR >= 3 & INDFMPIR < 4 ~ 4,
+      INDFMPIR >= 4                ~ 5,   # 4–4.99 and all 5.00 (true PIR ≥ 5)
+      is.na(INDFMPIR)              ~ NA_real_
+    ),
+    PIRCAT = factor(
+      PIRCAT,
+      levels = 1:5,
+      labels = c("<1", "1-1.99", "2-2.99", "3-3.99", "4+")
+    )
+  )
 
-table(FullData_allcycles$PIRCAT, useNA="ifany") #1030 
+table(FullData_allcycles$PIRCAT, useNA = "ifany")
 ```
 1030 missing PIR
 

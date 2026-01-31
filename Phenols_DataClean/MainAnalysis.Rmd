@@ -68,13 +68,17 @@ exp_coeffs <- function(model) {
 FullData_allcyclesFINAL2<-readRDS("FullData_allcyclesFINAL2.rds")
 
 #change units of creatinine (mg/dl)
-FullData_allcyclesFINAL2$URXUCR_final <- FullData_allcyclesFINAL2$URXUCR_final * 10000
+FullData_allcyclesFINAL2$log_URXUCR_final <- FullData_allcyclesFINAL2$URXUCR_final * 10000
+
+#log transform log_URXUCR_final 
+hist(log(FullData_allcyclesFINAL2$URXUCR_final))
+FullData_allcyclesFINAL2$log_URXUCR_final<-log(FullData_allcyclesFINAL2$URXUCR_final)
+
 
 #dropped those with missing creatinine
-FullData_allcyclesFINAL2 = FullData_allcyclesFINAL2[!is.na(FullData_allcyclesFINAL2$URXUCR_final), ] 
+FullData_allcyclesFINAL2 = FullData_allcyclesFINAL2[!is.na(FullData_allcyclesFINAL2$log_URXUCR_final), ] 
 
 
-table(FullData_allcyclesFINAL2$FOODSEC, useNA="ifany")
 
 #rename variables 
 FullData_allcyclesFINAL2$SEX <- factor(FullData_allcyclesFINAL2$SEX, levels = c(1, 2), labels = c("Male", "Female"))
@@ -85,7 +89,8 @@ FullData_allcyclesFINAL2$RACEETH <- factor(FullData_allcyclesFINAL2$RACEETH, lev
 
 FullData_allcyclesFINAL2$EDUCAT <- factor(FullData_allcyclesFINAL2$EDUCAT, levels=c(1,2,3,4), labels= c("Less than 9th grade", "High school graduate/GED or equivalent equivalent","Some college or AA degree", "College or above")) 
 
-FullData_allcyclesFINAL2$PIRCAT <- factor(FullData_allcyclesFINAL2$PIRCAT, levels=c(1,2,3,4,5), labels= c("Low Poverty","Near Poverty", "Middle Income","Upper-Middle Income", "High Income")) 
+
+
 
 FullData_allcyclesFINAL2$FOODSEC <- factor(FullData_allcyclesFINAL2$FOODSEC, levels = c(1, 2, 3, 4), labels= c("Fully Food Secure", "Marginally Food Secure", "Low Food Security", "Very Low Food Secure"))
 
@@ -113,7 +118,7 @@ table(FullData_allcyclesFINAL2$FOODSEC, useNA="ifany")
 
 ```
 
-log phenols 
+Visual inspection of the histogram and Q–Q plot of log(log_URXUCR_final) indicates approximate normality with minor tail deviations. Given the large sample size (n = 10 000), parametric methods based on normality are appropriate after log phenols
 ```{r}
 library(dplyr)
 
@@ -140,7 +145,7 @@ now we need to use the survey package to do survey analysis
 
 
 ```{r}
-FullData_allcyclesFINAL2 <- subset(FullData_allcyclesFINAL2, SAMPLE2 == 1)
+FullData_allcyclesFINAL2<- subset(FullData_allcyclesFINAL2, SAMPLE2 == 1)
 
 table(FullData_allcyclesFINAL2$PIRCAT, useNA="ifany")
 table(FullData_allcyclesFINAL2$FOODSEC, useNA="ifany")
@@ -151,20 +156,20 @@ table(FullData_allcyclesFINAL2$EDUCAT, useNA="ifany")
 summary(FullData_allcyclesFINAL2$SURVWEIGHT, useNA="ifany")
 
 
-saveRDS(FullData_allcyclesFINAL2, "FullData_allcyclesFINAL2.rds")
+saveRDS(FullData_allcyclesFINAL2, "FullData_allcyclesFINAL3.rds")
 
 ```
 
 
 ```{r}
 
-FullData_allcyclesFINAL2<-readRDS("FullData_allcyclesFINAL2.rds")
+FullData_allcyclesFINAL3<-readRDS("FullData_allcyclesFINAL3.rds")
 
 survey <-svydesign(ids = ~SDMVPSU,
           strata = ~SDMVSTRA,
          weights = ~SURVWEIGHT,
          nest = TRUE, 
-         data = FullData_allcyclesFINAL2)
+         data = FullData_allcyclesFINAL3)
 
 
 ```
@@ -212,9 +217,7 @@ tbl_summary(
   bold_labels()%>%
   add_overall()
 ```
-```{r}
-table(FullData_allcyclesFINAL2$FOODSEC, useNA="ifany")
-```
+
 
 
 # GEOMETRIC MEANS
@@ -325,26 +328,26 @@ corrplot(cor_mat_LOG, type="full", order= "original", col = brewer.pal(n=8, name
 ```{r, echo=FALSE}
 #URXBPH_LOG
 
-mod1_unadj<-svyglm(URXBPH_LOG~(FOODSEC) + URXUCR_final, design=survey)
+mod1_unadj<-svyglm(URXBPH_LOG~(FOODSEC) + log_URXUCR_final, design=survey)
 
 #URXBP3_LOG
-mod2_unadj<-svyglm(URXBP3_LOG~(FOODSEC) + URXUCR_final , design=survey)
+mod2_unadj<-svyglm(URXBP3_LOG~(FOODSEC) + log_URXUCR_final , design=survey)
 
 #URXTRS_LOG
-mod3_unadj<-svyglm(URXTRS_LOG~(FOODSEC) + URXUCR_final , design=survey)
+mod3_unadj<-svyglm(URXTRS_LOG~(FOODSEC) + log_URXUCR_final , design=survey)
 
 #URXBUP_LOG
-mod4_unadj<-svyglm(URXBUP_LOG~(FOODSEC) + URXUCR_final,  design=survey)
+mod4_unadj<-svyglm(URXBUP_LOG~(FOODSEC) + log_URXUCR_final,  design=survey)
 
 #URXEPB_LOG
 
-mod5_unadj<-svyglm(URXEPB_LOG~(FOODSEC) + URXUCR_final, design=survey)
+mod5_unadj<-svyglm(URXEPB_LOG~(FOODSEC) + log_URXUCR_final, design=survey)
 
 #URXMPB_LOG
-mod6_unadj<-svyglm(URXMPB_LOG~(FOODSEC) + URXUCR_final, design=survey)
+mod6_unadj<-svyglm(URXMPB_LOG~(FOODSEC) + log_URXUCR_final, design=survey)
 
 #URXPPB_LOG
-mod7_unadj<-svyglm(URXPPB_LOG~(FOODSEC) + URXUCR_final, design=survey)
+mod7_unadj<-svyglm(URXPPB_LOG~(FOODSEC) + log_URXUCR_final, design=survey)
 
 
 
@@ -369,40 +372,40 @@ write.csv(unadj_combined_df, "Results/Unadjusted_Models.csv")
 
 ```{r, echo=FALSE}
 #URXBPH_LOG
-mod1c_adj<- svyglm(URXBPH_LOG ~ (FOODSEC) + URXUCR_final + (SEX) + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr),design = survey)
+mod1c_adj<- svyglm(URXBPH_LOG ~ (FOODSEC) + log_URXUCR_final + (SEX) + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr),design = survey)
 
 
 
 #URXBP3_LOG
 
-mod2c_adj<- svyglm(URXBP3_LOG ~ (FOODSEC) + URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr), design = survey)
+mod2c_adj<- svyglm(URXBP3_LOG ~ (FOODSEC) + log_URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr), design = survey)
 
 
 
 #URXTRS_LOG
 
-mod3c_adj<- svyglm(URXTRS_LOG ~ (FOODSEC) + URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr), design = survey)
+mod3c_adj<- svyglm(URXTRS_LOG ~ (FOODSEC) + log_URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr), design = survey)
 
 
 
 #MCPP
-mod4c_adj<- svyglm(URXBUP_LOG ~ (FOODSEC) + URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr), design = survey)
+mod4c_adj<- svyglm(URXBUP_LOG ~ (FOODSEC) + log_URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr), design = survey)
 
 
 
 #URXEPB_LOG
 
-mod5c_adj<- svyglm(URXEPB_LOG ~ (FOODSEC) + URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr), design = survey)
+mod5c_adj<- svyglm(URXEPB_LOG ~ (FOODSEC) + log_URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr), design = survey)
 
 
 
 #URXMPB_LOG
-mod6c_adj<- svyglm(URXMPB_LOG ~ (FOODSEC) + URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (cycleyr), design = survey)
+mod6c_adj<- svyglm(URXMPB_LOG ~ (FOODSEC) + log_URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (cycleyr), design = survey)
 
 
 
 #URXPPB_LOG
-mod7c_adj<- svyglm(URXPPB_LOG ~ (FOODSEC) + URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr), design = survey)
+mod7c_adj<- svyglm(URXPPB_LOG ~ (FOODSEC) + log_URXUCR_final + SEX + (AGEGROUP) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr), design = survey)
 
 
 
@@ -425,41 +428,41 @@ with age as continuous just in case
 ```{r, echo=FALSE}
 
 #URXBPH_LOG
-mod1c_adj<- svyglm(URXBPH_LOG ~ (FOODSEC) + URXUCR_final + (SEX) + (RIDAGEYR) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr),design = survey)
+mod1c_adj<- svyglm(URXBPH_LOG ~ (FOODSEC) + log_URXUCR_final + (SEX) + (RIDAGEYR) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr),design = survey)
 
 
 
 #URXBP3_LOG
 
-mod2c_adj<- svyglm(URXBP3_LOG ~ (FOODSEC) + URXUCR_final + SEX + (RIDAGEYR) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr), design = survey)
+mod2c_adj<- svyglm(URXBP3_LOG ~ (FOODSEC) + log_URXUCR_final + SEX + (RIDAGEYR) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr), design = survey)
 
 
 
 #URXTRS_LOG
 
-mod3c_adj<- svyglm(URXTRS_LOG ~ (FOODSEC) + URXUCR_final + SEX + (RIDAGEYR) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr), design = survey)
+mod3c_adj<- svyglm(URXTRS_LOG ~ (FOODSEC) + log_URXUCR_final + SEX + (RIDAGEYR) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr), design = survey)
 
 
 
 #MCPP
-mod4c_adj<- svyglm(URXBUP_LOG ~ (FOODSEC) + URXUCR_final + SEX + (RIDAGEYR) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr), design = survey)
+mod4c_adj<- svyglm(URXBUP_LOG ~ (FOODSEC) + log_URXUCR_final + SEX + (RIDAGEYR) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr), design = survey)
 
 
 
 #URXEPB_LOG
 
-mod5c_adj<- svyglm(URXEPB_LOG ~ (FOODSEC) + URXUCR_final + SEX + (RIDAGEYR) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr), design = survey)
+mod5c_adj<- svyglm(URXEPB_LOG ~ (FOODSEC) + log_URXUCR_final + SEX + (RIDAGEYR) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr), design = survey)
 
 
 
 #URXMPB_LOG
-mod6c_adj<- svyglm(URXMPB_LOG ~ (FOODSEC) + URXUCR_final + SEX + (RIDAGEYR) +  (EDUCAT)+ (RACEETH) + (cycleyr), design = survey)
+mod6c_adj<- svyglm(URXMPB_LOG ~ (FOODSEC) + log_URXUCR_final + SEX + (RIDAGEYR) +  (EDUCAT)+ (RACEETH) + (cycleyr), design = survey)
 
 
 
 
 #URXPPB_LOG
-mod7c_adj<- svyglm(URXPPB_LOG ~ (FOODSEC) + URXUCR_final + SEX + (RIDAGEYR) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr), design = survey)
+mod7c_adj<- svyglm(URXPPB_LOG ~ (FOODSEC) + log_URXUCR_final + SEX + (RIDAGEYR) +  (EDUCAT)+ (RACEETH) + (PIRCAT) + (cycleyr), design = survey)
 
 
 
@@ -481,11 +484,11 @@ write.csv(adj_combined_dfs, "Results/Adjusted_Models2b.csv")
 
 ```{r}
 
-FullData_allcyclesFINAL2$food_security <- as.numeric(FullData_allcyclesFINAL2$FOODSEC)
-class(FullData_allcyclesFINAL2$food_security)
+FullData_allcyclesFINAL3$food_security <- as.numeric(FullData_allcyclesFINAL3$FOODSEC)
+class(FullData_allcyclesFINAL3$food_security)
 
 
-saveRDS(FullData_allcyclesFINAL2, "FullData_allcyclesFINAL2.rds")
+saveRDS(FullData_allcyclesFINAL3, "FullData_allcyclesFINAL3.rds")
 ```
 
 ```{r, include=FALSE}
@@ -493,11 +496,11 @@ survey <-svydesign(ids = ~SDMVPSU,
           strata = ~SDMVSTRA,
          weights = ~SURVWEIGHT,
          nest = TRUE, 
-         data = FullData_allcyclesFINAL2)
+         data = FullData_allcyclesFINAL3)
 
 summary(survey)
 
-summary(FullData_allcyclesFINAL2$SURVWEIGHT, useNA="ifany")
+summary(FullData_allcyclesFINAL3$SURVWEIGHT, useNA="ifany")
 
 
 ```
@@ -506,37 +509,39 @@ summary(FullData_allcyclesFINAL2$SURVWEIGHT, useNA="ifany")
 ```{r}
 
 # URXBPH_LOG p= 0.016661
-I.genmod1 <- svyglm(URXBPH_LOG ~ food_security * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
+I.genmod1 <- svyglm(URXBPH_LOG ~ food_security * SEX + log_URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
                     design = survey)
+
+
 regTermTest(I.genmod1, ~food_security:SEX)
 
 # URXBP3_LOG p= 0.34129 
-I.genmod2 <- svyglm(URXBP3_LOG ~ food_security * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
+I.genmod2 <- svyglm(URXBP3_LOG ~ food_security * SEX + log_URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
                     design = survey)
 regTermTest(I.genmod2, ~food_security:SEX)
 
 # URXTRS_LOG p= 0.88496 
-I.genmod3 <- svyglm(URXTRS_LOG ~ food_security * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
+I.genmod3 <- svyglm(URXTRS_LOG ~ food_security * SEX + log_URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
                     design = survey)
 regTermTest(I.genmod3, ~food_security:SEX)
 
 # URXBUP_LOG p= 6.273e-09 
-I.genmod4 <- svyglm(URXBUP_LOG ~ food_security * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
+I.genmod4 <- svyglm(URXBUP_LOG ~ food_security * SEX + log_URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
                     design = survey)
 regTermTest(I.genmod4, ~food_security:SEX)
 
 # URXEPB_LOG p=0.0036593
-I.genmod5 <- svyglm(URXEPB_LOG ~ food_security * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
+I.genmod5 <- svyglm(URXEPB_LOG ~ food_security * SEX + log_URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
                     design = survey)
 regTermTest(I.genmod5, ~food_security:SEX)
 
 # URXMPB_LOG p=0.0013114
-I.genmod6 <- svyglm(URXMPB_LOG ~ food_security * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
+I.genmod6 <- svyglm(URXMPB_LOG ~ food_security * SEX + log_URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
                     design = survey)
 regTermTest(I.genmod6, ~food_security:SEX)
 
 # URXPPB_LOG p=0.0035299
-I.genmod7 <- svyglm(URXPPB_LOG ~ food_security * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
+I.genmod7 <- svyglm(URXPPB_LOG ~ food_security * SEX + log_URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
                     design = survey)
 regTermTest(I.genmod7, ~food_security:SEX)
 
@@ -545,31 +550,31 @@ regTermTest(I.genmod7, ~food_security:SEX)
 #####Strata estimates 
 ```{r}
 # URXBPH_LOG
-I.genBmod1 <- svyglm(URXBPH_LOG ~ FOODSEC * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
+I.genBmod1 <- svyglm(URXBPH_LOG ~ FOODSEC * SEX + log_URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
                      design = survey)
 
 # URXBP3_LOG
-I.genBmod2 <- svyglm(URXBP3_LOG ~ FOODSEC * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
+I.genBmod2 <- svyglm(URXBP3_LOG ~ FOODSEC * SEX + log_URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
                      design = survey)
 
 # URXTRS_LOG
-I.genBmod3 <- svyglm(URXTRS_LOG ~ FOODSEC * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
+I.genBmod3 <- svyglm(URXTRS_LOG ~ FOODSEC * SEX + log_URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
                      design = survey)
 
 # URXBUP_LOG
-I.genBmod4 <- svyglm(URXBUP_LOG ~ FOODSEC * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
+I.genBmod4 <- svyglm(URXBUP_LOG ~ FOODSEC * SEX + log_URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
                      design = survey)
 
 # URXEPB_LOG
-I.genBmod5 <- svyglm(URXEPB_LOG ~ FOODSEC * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
+I.genBmod5 <- svyglm(URXEPB_LOG ~ FOODSEC * SEX + log_URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
                      design = survey)
 
 # URXMPB_LOG
-I.genBmod6 <- svyglm(URXMPB_LOG ~ FOODSEC * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
+I.genBmod6 <- svyglm(URXMPB_LOG ~ FOODSEC * SEX + log_URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
                      design = survey)
 
 # URXPPB_LOG
-I.genBmod7 <- svyglm(URXPPB_LOG ~ FOODSEC * SEX + URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
+I.genBmod7 <- svyglm(URXPPB_LOG ~ FOODSEC * SEX + log_URXUCR_final + AGEGROUP + EDUCAT + RACEETH + PIRCAT + cycleyr,
                      design = survey)
 ```
 
@@ -616,39 +621,39 @@ write.csv(GENall_results, "Results/GENstrata_results.csv", row.names=FALSE)
 
 ```{r}
 # BPA_LOG  p= 0.10837  
-I.REmod1 <- svyglm(URXBPH_LOG ~ food_security * RACEETH + URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
+I.REmod1 <- svyglm(URXBPH_LOG ~ food_security * RACEETH + log_URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
                     design = survey )
 regTermTest(I.REmod1, ~food_security:RACEETH) 
 
 # BP3_LOG  p= 0.057371
-I.REmod2 <- svyglm(URXBP3_LOG ~ food_security * RACEETH + URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
+I.REmod2 <- svyglm(URXBP3_LOG ~ food_security * RACEETH + log_URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
                     design = survey)
 regTermTest(I.REmod2, ~food_security:RACEETH)
 
 # TRS_LOG p= 0.081281
-I.REmod3 <- svyglm(URXTRS_LOG ~ food_security * RACEETH + URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
+I.REmod3 <- svyglm(URXTRS_LOG ~ food_security * RACEETH + log_URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
                     design = survey)
 regTermTest(I.REmod3, ~food_security:RACEETH) 
 
 # BUP_LOG  p= 0.002877
-I.REmod4 <- svyglm(URXBUP_LOG ~ food_security * RACEETH + URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
+I.REmod4 <- svyglm(URXBUP_LOG ~ food_security * RACEETH + log_URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
                     design = survey)
 regTermTest(I.REmod4, ~food_security:RACEETH) 
 
 # EPB_LOG p= 0.041265
-I.REmod5 <- svyglm(URXEPB_LOG ~ food_security * RACEETH + URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
+I.REmod5 <- svyglm(URXEPB_LOG ~ food_security * RACEETH + log_URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
                     design = survey)
 
 regTermTest(I.REmod5, ~food_security:RACEETH)
 
 # MPB_LOG p= 0.0059458
-I.REmod6 <- svyglm(URXMPB_LOG ~ food_security * RACEETH + URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
+I.REmod6 <- svyglm(URXMPB_LOG ~ food_security * RACEETH + log_URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
                     design = survey)
 
 regTermTest(I.REmod6, ~food_security:RACEETH)
 
 # PPB_LOG p= 0.0041702
-I.REmod7 <- svyglm(URXPPB_LOG ~ food_security * RACEETH + URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
+I.REmod7 <- svyglm(URXPPB_LOG ~ food_security * RACEETH + log_URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
                     design = survey)
 
 regTermTest(I.REmod7, ~food_security:RACEETH)
@@ -659,33 +664,33 @@ regTermTest(I.REmod7, ~food_security:RACEETH)
 #####Strata estimates 
 ```{r}
 # BPA_LOG  
-I.REBmod1 <- svyglm(URXBPH_LOG ~ FOODSEC * RACEETH + URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
+I.REBmod1 <- svyglm(URXBPH_LOG ~ FOODSEC * RACEETH + log_URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
                     design = survey )
 
 # BP3_LOG 
-I.REBmod2 <- svyglm(URXBP3_LOG ~ FOODSEC * RACEETH + URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
+I.REBmod2 <- svyglm(URXBP3_LOG ~ FOODSEC * RACEETH + log_URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
                     design = survey)
 
 # TRS_LOG 
-I.REBmod3 <- svyglm(URXTRS_LOG ~ FOODSEC * RACEETH + URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
+I.REBmod3 <- svyglm(URXTRS_LOG ~ FOODSEC * RACEETH + log_URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
                     design = survey)
 
 # BUP_LOG  
-I.REBmod4 <- svyglm(URXBUP_LOG ~ FOODSEC * RACEETH + URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
+I.REBmod4 <- svyglm(URXBUP_LOG ~ FOODSEC * RACEETH + log_URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
                     design = survey)
 
 # EPB_LOG
-I.REBmod5 <- svyglm(URXEPB_LOG ~ FOODSEC * RACEETH + URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
+I.REBmod5 <- svyglm(URXEPB_LOG ~ FOODSEC * RACEETH + log_URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
                     design = survey)
 
 
 # MPB_LOG
-I.REBmod6 <- svyglm(URXMPB_LOG ~ FOODSEC * RACEETH + URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
+I.REBmod6 <- svyglm(URXMPB_LOG ~ FOODSEC * RACEETH + log_URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
                     design = survey)
 
 
 # PPB_LOG p= 0.0041702
-I.REBmod7 <- svyglm(URXPPB_LOG ~ FOODSEC * RACEETH + URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
+I.REBmod7 <- svyglm(URXPPB_LOG ~ FOODSEC * RACEETH + log_URXUCR_final + AGEGROUP + EDUCAT + SEX + PIRCAT + cycleyr,
                     design = survey)
 
 
